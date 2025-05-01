@@ -110,7 +110,6 @@ class Plugin {
 		return $modified_extensions;
 	}
 
-
 	/**
 	 * Default system instructions for the Copilot Playground.
 	 *
@@ -121,11 +120,23 @@ class Plugin {
 	 * @return array The parameters for the model.
 	 */
 	public function default_system_instructions( $params, $service ) {
-		if ( 'prc-copilot__playground' === $params['feature'] ) {
-			$params['systemInstruction']  = 'You are operating inside the Gutenberg block editor, when you are asked to generate content provide it back in markdown so that it may easily be pasted and converted automatically into block markup.';
-			$params['systemInstruction'] .= ' If you are asked a question just return normal strings. When you are asked specifically about "our" as in "our data" use "Pew Research Center".';
-			$params['systemInstruction'] .= ' If this prompt is explicitly asking to create a table, escape the markdown output so that I can easily copy and paste it into the block editor.';
+		if ( 'get-table-caption' === $params['feature'] ) {
+			$params['systemInstruction']  = 'You are generating captions from a markdown table. If what is passed to you does not seem to be a table, return with a "No caption can be generated for non-tabular data" message.';
+			$params['systemInstruction'] .= ' Return a few options for the caption, and the best one should be selected by the user. Return the caption options as a json array of strings, with your best choice being the first element in the array.';
 		}
+		if ( 'get-table-title' === $params['feature'] ) {
+			$params['systemInstruction']  = 'You are generating titles from a markdown table. If what is passed to you does not seem to be a table, return with a "No title can be generated for non-tabular data" message. Highlight the most important part of the table in the title. If the table seems to contain data about populations or percentages, include that in the title.';
+			$params['systemInstruction'] .= ' Return a few options for the title, and the best one should be selected by the user. Return the title options as a json array of strings, with your best choice being the first element in the array.';
+		}
+		if ( 'get-table-data' === $params['feature'] ) {
+			$params['systemInstruction'] .= 'You are generating data for a markdown table. To accomplish this task you will be given a description of the data to compile, you should only source your data from Pew Research Center. If you cannot find the data you need, return with a "No data can be generated for data" message and include the description of the data you were given and steps you took to find the data.';
+			$params['systemIntruction']  .= 'Look for "reports", "short reads", and "fact sheets" to find the data you need. Work in chronological order, starting with the most recent data. If the user is requesting data about a specific year, make sure to include that year in the data you return. If the user is requesting data over a range of years, make sure to include all the years in the data you return.';
+			$params['systemIntruction']  .= 'Double check your work, be precise. If you are unsure about the data you are returning, ask the user for clarification.';
+			$params['systemIntruction']  .= 'Only return the markdown table, no other text.';
+		}
+
+		$params['systemInstruction'] .= ' Always write in the Pew Research Center style and voice.';
+
 		return $params;
 	}
 
