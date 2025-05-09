@@ -70,6 +70,9 @@ class Plugin {
 		// Load plugin loading class.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/class-loader.php';
 
+		// Load assets.
+		require_once plugin_dir_path( __DIR__ ) . '/includes/class-assets.php';
+
 		// Initialize the loader.
 		$this->loader = new Loader();
 	}
@@ -83,6 +86,8 @@ class Plugin {
 	private function init_dependencies() {
 		$this->loader->add_filter( 'ai_services_model_params', $this, 'default_system_instructions', 10, 2 );
 		$this->loader->add_filter( 'jetpack_set_available_extensions', $this, 'disable_jetpack_ai_assistant', 10, 1 );
+
+		new Assets( $this->get_loader() );
 	}
 
 	/**
@@ -129,7 +134,7 @@ class Plugin {
 			$params['systemInstruction'] .= ' Return a few options for the title, and the best one should be selected by the user. Return the title options as a json array of strings, with your best choice being the first element in the array.';
 		}
 		if ( 'get-table-data' === $params['feature'] ) {
-			$params['systemInstruction'] .= 'You are generating data for a markdown table. To accomplish this task you will be given a description of the data to compile, you should only source your data from Pew Research Center. If you cannot find the data you need, return with a "No data can be generated for data" message and include the description of the data you were given and steps you took to find the data.';
+			$params['systemInstruction'] .= 'You are generating data for a markdown table. To accomplish this task you will be given a description of the data to compile, you should only source your data from Pew Research Center. If you cannot find the data you need, return with a "No data can be generated for request" message and include the description of the data you were given and steps you took to find the data.';
 			$params['systemIntruction']  .= 'Look for "reports", "short reads", and "fact sheets" to find the data you need. Work in chronological order, starting with the most recent data. If the user is requesting data about a specific year, make sure to include that year in the data you return. If the user is requesting data over a range of years, make sure to include all the years in the data you return.';
 			$params['systemIntruction']  .= 'Double check your work, be precise. If you are unsure about the data you are returning, ask the user for clarification.';
 			$params['systemIntruction']  .= 'Only return the markdown table, no other text.';
