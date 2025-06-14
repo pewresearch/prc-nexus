@@ -23,7 +23,7 @@ import { LoadingIcon } from '../components/loading';
 import { AI_COLORS } from '../constants';
 
 function addToCopilotToolbar(props) {
-	const { title, icon, toolType, tool, onRequest, onSelect, clientId } = props;
+	const { title, icon, toolType, tool, onRequest, onSelect } = props;
 	addFilter(
 		'prcCopilot.toolbarMenuItems',
 		'prc-copilot/extend-copilot-toolbar',
@@ -36,7 +36,6 @@ function addToCopilotToolbar(props) {
 				setCandidatesModalOpen,
 				requestedFunction,
 				selectedFunction,
-				clientId
 			}
 		) => {
 		  const itemKey = `${toolType}-${tool}`;
@@ -71,6 +70,7 @@ function removeFromCopilotToolbar() {
 }
 
 function CopilotToolbarMenu({blockName, clientId, isReady}) {
+	console.log('CopilotToolbarMenu', blockName, clientId, isReady);
 	const [modalTitle, setModalTitle] = useState('');
 	const [modalDescription, setModalDescription] = useState('');
 	const [activeTool, setActiveTool] = useState(null);
@@ -106,7 +106,9 @@ function CopilotToolbarMenu({blockName, clientId, isReady}) {
 
 	if ( !isReady ) {
 		return(
-			<ToolbarButton label={label} text={label} icon={<LoadingIcon />}/>
+			<ToolbarButton label={label} icon={<LoadingIcon />}>
+				{label}
+			</ToolbarButton>
 		);
 	}
 
@@ -126,6 +128,7 @@ function CopilotToolbarMenu({blockName, clientId, isReady}) {
 					isOpen={requestModalOpen}
 					onClose={() => setRequestModalOpen(false)}
 					onRequest={requestedFunction?.current}
+					clientId={clientId}
 				/>
 			}
 			{candidatesModalOpen && <CandidatesModal />}

@@ -1,0 +1,68 @@
+{
+    "packages": [
+        {
+            "name": "automattic/wp-feature-api",
+            "version": "v0.1.4",
+            "version_normalized": "0.1.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Automattic/wp-feature-api.git",
+                "reference": "80333a9ac2e1f1d19fa3b9848604d11fd2f4b6f3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Automattic/wp-feature-api/zipball/80333a9ac2e1f1d19fa3b9848604d11fd2f4b6f3",
+                "reference": "80333a9ac2e1f1d19fa3b9848604d11fd2f4b6f3",
+                "shasum": ""
+            },
+            "require": {
+                "ext-hash": "*",
+                "ext-json": "*",
+                "php": ">=7.2.24"
+            },
+            "require-dev": {
+                "composer/ca-bundle": "1.5.6",
+                "phpcompatibility/phpcompatibility-wp": "~2.1.3",
+                "squizlabs/php_codesniffer": "3.10.3",
+                "wp-coding-standards/wpcs": "~3.1.0",
+                "yoast/phpunit-polyfills": "^1.1.0"
+            },
+            "suggest": {
+                "ext-dom": "*"
+            },
+            "time": "2025-05-14T17:14:14+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "classmap": [
+                    "includes/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Automattic",
+                    "homepage": "https://automattic.ai/"
+                }
+            ],
+            "description": "A system for exposing WordPress functionality in a standardized, discoverable way for both server and client-side use",
+            "keywords": [
+                "ai",
+                "api",
+                "features",
+                "llm",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/Automattic/wp-feature-api/issues",
+                "source": "https://github.com/Automattic/wp-feature-api/tree/v0.1.4"
+            },
+            "install-path": "../automattic/wp-feature-api"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}

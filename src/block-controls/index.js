@@ -20,18 +20,23 @@ const withPRCCopilotToolbarControls = createHigherOrderComponent(
 
 			const pilotLight = useSelect(
 				(select) => {
+					if (!ALLOWED_BLOCKS.includes(name)) {
+						return false;
+					}
 					const { hasAvailableServices } = select('ai-services/ai');
+					console.log('hasAvailableServices', hasAvailableServices);
 					const aiServicesReady = hasAvailableServices();
+					console.log('aiServicesReady', aiServicesReady);
 					return aiServicesReady;
 				},
 				[clientId, name]
 			);
 
-			console.log('pilotLight', pilotLight);
-
 			if (!ALLOWED_BLOCKS.includes(name)) {
 				return <BlockEdit {...props} />;
 			}
+
+			console.log('pilotLight', pilotLight);
 
 			return (
 				<>

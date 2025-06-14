@@ -6,7 +6,8 @@
 /**
  * WordPress Dependencies
  */
-import { select } from '@wordpress/data';
+import { select, dispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 
 /**
  * Internal Dependencies
@@ -44,6 +45,7 @@ export async function processToolRequest(
 	model?: string
 ): Promise<ProcessToolRequestResult | null | void> {
 	const { hasAvailableServices, getAvailableService } = select('ai-services/ai');
+	const { createErrorNotice } = dispatch(noticesStore);
 	if ( hasAvailableServices() ) {
 		const service = getAvailableService();
 		console.log('service ==', {...service});
@@ -91,6 +93,7 @@ export async function processToolRequest(
 			};
 		} catch (error) {
 			console.error(error);
+			createErrorNotice(error?.message || String(error));
 		}
 	} else {
 		console.log('No available services...');

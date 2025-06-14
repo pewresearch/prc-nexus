@@ -42,13 +42,15 @@ export interface RequestModalProps {
 	tool?: string | null;
 	attributes?: Record<string, unknown>;
 	isOpen?: boolean;
+	clientId?: string;
 	allowAdditionalInstructions?: boolean;
 	onClose?: () => void;
 	onRequest?: (
 		request: string,
 		instructions: string,
 		tool: string | null,
-		notices?: NoticeFunctions
+		clientId: string,
+		notices?: NoticeFunctions,
 	) => Promise<void> | null;
 }
 
@@ -64,13 +66,15 @@ export function RequestModal({
 	isOpen = false,
 	allowAdditionalInstructions = false,
 	onClose = () => {},
+	clientId,
 	onRequest = async (
 		request: string,
 		instructions: string,
 		tool: string,
-		notices?: NoticeFunctions
+		clientId: string,
+		notices?: NoticeFunctions,
 	) => {
-		console.log('onRequest ==', request, instructions, tool);
+		console.log('onRequest ==', request, instructions, tool, clientId);
 	},
 }: RequestModalProps) {
 	const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -79,6 +83,7 @@ export function RequestModal({
 
 	useEffect(() => {
 		if (isOpen) {
+			console.log('isOpen = clientId', clientId);
 			setRequest('');
 			setInstructions('');
 		}
@@ -89,7 +94,7 @@ export function RequestModal({
 	const doRequest = useCallback(async () => {
 		setIsGenerating(true);
 		try {
-			await onRequest(request, instructions, tool, {
+			await onRequest(request, instructions, tool, clientId, {
 				createSuccessNotice,
 				createErrorNotice,
 			});
@@ -98,7 +103,7 @@ export function RequestModal({
 		}
 		setIsGenerating(false);
 		onClose();
-	}, [request, instructions, tool, onRequest, createSuccessNotice, createErrorNotice, onClose]);
+	}, [request, instructions, tool, onRequest, createSuccessNotice, createErrorNotice, onClose, clientId]);
 
 	const icon = <Sparkles />;
 

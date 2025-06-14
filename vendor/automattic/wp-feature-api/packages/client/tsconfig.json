@@ -1,0 +1,29 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"composite": true,
+		"checkJs": true,
+		"allowSyntheticDefaultImports": true,
+		"jsx": "preserve",
+		"lib": [ "DOM", "DOM.Iterable", "ESNext" ],
+		"target": "ES2015",
+		"declaration": true,
+		"declarationMap": true,
+		"emitDeclarationOnly": true,
+		"isolatedModules": true,
+		"skipLibCheck": true,
+		"noImplicitReturns": true,
+		"moduleResolution": "node",
+		"esModuleInterop": false,
+		"resolveJsonModule": true,
+
+		"typeRoots": [ "./typings", "./node_modules/@types" ],
+		"types": [],
+
+		"rootDir": "${configDir}/src",
+		"declarationDir": "${configDir}/build-types"
+	},
+	"include": [ "${configDir}/src" ],
+	"exclude": [ "**/build" ]
+}

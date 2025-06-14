@@ -67,11 +67,21 @@ class Plugin {
 	 * @access   private
 	 */
 	private function load_dependencies() {
+		// Load WP Feature API.
+		// require_once plugin_dir_path( __DIR__ ) . '/vendor/automattic/wp-feature-api/wp-feature-api.php';
+		// Load WordPress MCP.
+
 		// Load plugin loading class.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/class-loader.php';
 
 		// Load assets.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/class-assets.php';
+
+		// Load post meta class.
+		require_once plugin_dir_path( __DIR__ ) . '/includes/class-post-meta.php';
+
+		// Load tools.
+		require_once plugin_dir_path( __DIR__ ) . '/includes/tools/get-tabular-data/class-get-tabular-data.php';
 
 		// Initialize the loader.
 		$this->loader = new Loader();
@@ -88,6 +98,8 @@ class Plugin {
 		$this->loader->add_filter( 'jetpack_set_available_extensions', $this, 'disable_jetpack_ai_assistant', 10, 1 );
 
 		new Assets( $this->get_loader() );
+		new Post_Meta( $this->get_loader() );
+		new Tools\Get_Tabular_Data( $this->get_loader() );
 	}
 
 	/**
@@ -132,12 +144,6 @@ class Plugin {
 		if ( 'get-table-title' === $params['feature'] ) {
 			$params['systemInstruction']  = 'You are generating titles from a markdown table. If what is passed to you does not seem to be a table, return with a "No title can be generated for non-tabular data" message. Highlight the most important part of the table in the title. If the table seems to contain data about populations or percentages, include that in the title.';
 			$params['systemInstruction'] .= ' Return a few options for the title, and the best one should be selected by the user. Return the title options as a json array of strings, with your best choice being the first element in the array.';
-		}
-		if ( 'get-table-data' === $params['feature'] ) {
-			$params['systemInstruction'] .= 'You are generating data for a markdown table. To accomplish this task you will be given a description of the data to compile, you should only source your data from Pew Research Center. If you cannot find the data you need, return with a "No data can be generated for request" message and include the description of the data you were given and steps you took to find the data.';
-			$params['systemIntruction']  .= 'Look for "reports", "short reads", and "fact sheets" to find the data you need. Work in chronological order, starting with the most recent data. If the user is requesting data about a specific year, make sure to include that year in the data you return. If the user is requesting data over a range of years, make sure to include all the years in the data you return.';
-			$params['systemIntruction']  .= 'Double check your work, be precise. If you are unsure about the data you are returning, ask the user for clarification.';
-			$params['systemIntruction']  .= 'Only return the markdown table, no other text.';
 		}
 
 		$params['systemInstruction'] .= ' Always write in the Pew Research Center style and voice.';
