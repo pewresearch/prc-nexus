@@ -82,6 +82,7 @@ class Plugin {
 
 		// Load tools.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/tools/get-tabular-data/class-get-tabular-data.php';
+		require_once plugin_dir_path( __DIR__ ) . '/includes/tools/generate-knowledge-quiz/class-generate-knowledge-quiz.php';
 
 		// Initialize the loader.
 		$this->loader = new Loader();
@@ -100,6 +101,7 @@ class Plugin {
 		new Assets( $this->get_loader() );
 		new Post_Meta( $this->get_loader() );
 		new Tools\Get_Tabular_Data( $this->get_loader() );
+		new Tools\Generate_Knowledge_Quiz( $this->get_loader() );
 	}
 
 	/**

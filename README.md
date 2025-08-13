@@ -6,6 +6,11 @@ AI services and tools for PRC Platform.
 
 PRC Copilot is a WordPress plugin that provides AI services and tools for the PRC Platform. It integrates with the `ai-services` plugin and provides specialized AI capabilities focused on table data manipulation and generation.
 
+## Dev Notes
+
+- This plugin is an active work in progress.
+- To create a Tier 0 "mcp tool", utilize the php api https://felixarntz.github.io/ai-services/Documentation.html
+
 ## Requirements
 
 - WordPress 6.7+

@@ -26,7 +26,7 @@ class Get_Tabular_Data {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'wp_feature_api_init', $this, 'register_feature' );
-		$loader->add_action( 'ai_services_model_params', $this, 'system_instruction' );
+		$loader->add_action( 'ai_services_model_params', $this, 'system_instruction', 10, 2 );
 	}
 
 	/**

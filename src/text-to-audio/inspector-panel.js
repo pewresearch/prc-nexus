@@ -1,0 +1,1 @@
+// This will contain the plugin's inspector sidebar panel with the audio preview. I also want to add "audio iterations" so you can preview different versions of the audio and keep the results, restore to one of them or delete them.

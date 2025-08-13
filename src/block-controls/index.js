@@ -11,7 +11,7 @@ import { createHigherOrderComponent } from '@wordpress/compose';
  */
 import { CopilotToolbarMenu } from './toolbar';
 
-const ALLOWED_BLOCKS = ['prc-block/table'];
+const ALLOWED_BLOCKS = ['prc-block/table', 'prc-quiz/controller'];
 
 const withPRCCopilotToolbarControls = createHigherOrderComponent(
 	(BlockEdit) =>
