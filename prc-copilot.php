@@ -19,7 +19,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       prc-copilot
- * Requires Plugins:  prc-platform-core, ai-services
+ * Requires Plugins:  prc-platform-core, ai-services, wp-mcp, wp-abilities-api
  */
 
 namespace PRC\Platform\Copilot;

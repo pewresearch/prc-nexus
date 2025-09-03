@@ -7,7 +7,9 @@
 
 namespace PRC\Platform\Copilot;
 
+use PRC\Platform\Copilot\Abilities\Abilities_Manager;
 use WP_Error;
+use WP\MCP\Core\McpAdapter;
 
 /**
  * Plugin class.
@@ -67,10 +69,6 @@ class Plugin {
 	 * @access   private
 	 */
 	private function load_dependencies() {
-		// Load WP Feature API.
-		// require_once plugin_dir_path( __DIR__ ) . '/vendor/automattic/wp-feature-api/wp-feature-api.php';
-		// Load WordPress MCP.
-
 		// Load plugin loading class.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/class-loader.php';
 
@@ -79,6 +77,9 @@ class Plugin {
 
 		// Load post meta class.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/class-post-meta.php';
+
+		// Load abilities/tools manager.
+		require_once plugin_dir_path( __DIR__ ) . '/includes/abilities/class-abilities-manager.php';
 
 		// Load tools.
 		require_once plugin_dir_path( __DIR__ ) . '/includes/tools/get-tabular-data/class-get-tabular-data.php';
@@ -97,11 +98,44 @@ class Plugin {
 	private function init_dependencies() {
 		$this->loader->add_filter( 'ai_services_model_params', $this, 'default_system_instructions', 10, 2 );
 		$this->loader->add_filter( 'jetpack_set_available_extensions', $this, 'disable_jetpack_ai_assistant', 10, 1 );
+		$this->loader->add_action( 'mcp_adapter_init', $this, 'register_mcp_server', 10, 1 );
 
 		new Assets( $this->get_loader() );
 		new Post_Meta( $this->get_loader() );
+		new Abilities_Manager( $this->get_loader() );
 		new Tools\Get_Tabular_Data( $this->get_loader() );
 		new Tools\Generate_Knowledge_Quiz( $this->get_loader() );
+	}
+
+	/**
+	 * Register the MCP server.
+	 *
+	 * @hook mcp_adapter_init
+	 *
+	 * @param \WP\MCP\Adapter $adapter The MCP adapter.
+	 */
+	public function register_mcp_server( $adapter ) {
+		$abilities = array(
+			'prc-copilot/wp-site-info',
+		);
+		$resources = array();
+		$prompts   = array();
+		$adapter->create_server(
+			'prc-copilot', // Unique server identifier.
+			'prc-copilot', // REST API namespace.
+			'mcp', // REST API route.
+			'PRC Copilot', // Server name.
+			'PRC Copilot MCP Server', // Server description.
+			'v1.0.0', // Server version.
+			array( // Transport methods.
+				\WP\MCP\Transport\Http\RestTransport::class,
+			),
+			\WP\MCP\Infrastructure\ErrorHandling\ErrorLogMcpErrorHandler::class, // Error handler.
+			\WP\MCP\Infrastructure\Observability\NullMcpObservabilityHandler::class, // Observability handler.
+			$abilities, // Abilities.
+			$resources, // Resources.
+			$prompts // Prompts.
+		);
 	}
 
 	/**
