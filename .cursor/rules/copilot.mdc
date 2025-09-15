@@ -1,9 +1,0 @@
----
-description:
-globs:
-alwaysApply: false
----
-# PRC Copilot
-
-# @wordpress/data redux store:
-I want to create a custom wordpress data redux store for my prc-copilot plugin. We'll have some state that will track the client ids of blocks that have attributes.metadata._copilot set. We'll provide dispatch functions to set that a block is ai generated in this way it'll set a data structure like this on attributes for the block: attributes.metadata._copilot = {userId: <theuser'sid>, generated: <timestamp>, tokens: null(for now)}. And then a function to let us update this for a specific block based on client id. Finally we just need a simple flag in the state that is like `hasAiGenerateContent: <boolean>`. So the first time the set as ai function is run it should set that to true. Additionally; when the store initializes it should do a check for blocks that have the attributes.metadata._copilot set and if to set the flag to true immediately.
