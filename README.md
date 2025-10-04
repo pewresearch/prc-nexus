@@ -1,70 +1,14 @@
-# PRC Copilot
+# PRC 🌀 Nexus
 
-AI services and tools for PRC Platform.
+AI services, abilities, and orchestration for PRC Platform.
 
 ## Overview
 
-PRC Copilot is a WordPress plugin that provides AI services and tools for the PRC Platform. It integrates with the `ai-services` plugin and provides specialized AI capabilities focused on table data manipulation and generation.
+PRC Nexus is a WordPress plugin that provides AI services, abilities, and orchestration for the PRC Platform. It integrates with the WordPress Abilities API, MCP Adapter, and PHP AI Client SDK.
+
+More than just a management plugin, Nexus is a friendly and helpful assistant across various surfaces, including WP CLI, the WordPress Editor, MCP, and Slack. The goal of PRC Nexus is to be accessible everywhere, enabling the use of AI capabilities across multiple touchpoints. You will recognize PRC Nexus's presence by the `🌀` symbol, which indicates Nexus has responded or otherwise interacted with a user.
 
 ## Dev Notes
 
 - This plugin is an active work in progress.
-- To create a Tier 0 "mcp tool", utilize the php api https://felixarntz.github.io/ai-services/Documentation.html
-
-## Requirements
-
-- WordPress 6.7+
-- PHP 8.2+
-- Required Plugins:
-  - prc-platform-core
-  - ai-services
-
-## Features
-
-### Table-Related AI Services
-
-The plugin provides three main AI features for table manipulation:
-
-#### 1. Table Caption Generation
-- Feature ID: `get-table-caption`
-- Takes a markdown table as input
-- Generates multiple caption options
-- Returns results as a JSON array of strings
-- Best option is placed as the first element
-- Follows Pew Research Center style and voice
-- Will return error message for non-tabular data
-
-#### 2. Table Title Generation
-- Feature ID: `get-table-title`
-- Takes a markdown table as input
-- Highlights the most important data points
-- Specially handles population and percentage data
-- Returns multiple title options as a JSON array
-- Best option is placed as the first element
-- Follows Pew Research Center style and voice
-- Will return error message for non-tabular data
-
-#### 3. Table Data Generation
-- Feature ID: `get-table-data`
-- Generates markdown tables from descriptions
-- Sources data exclusively from Pew Research Center
-- Focuses on:
-  - Reports
-  - Short reads
-  - Fact sheets
-- Handles temporal data requirements:
-  - Specific years
-  - Year ranges
-- Returns only the markdown table
-- Includes validation and error handling
-- Will return detailed error message if data cannot be found
-
-### Integration Features
-
-#### Jetpack AI Integration
-- Actively disables Jetpack's AI Assistant to prevent conflicts
-- Filters out 'ai-assistant' and 'ai-assistant-support' extensions
-
-## License
-
-This project is licensed under the GPL-2.0+ License - see the [LICENSE](LICENSE) file for details.
+- This plugin provides the WordPress Abilities API, MCP Adapter, and PHP AI Client SDK via Composer.

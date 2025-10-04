@@ -1,0 +1,19 @@
+{
+	"name": "pewresearch/prc-nexus",
+	"type": "wordpress-plugin",
+	"description": "PRC Nexus is a collection of WordPress AI powered tools, UI components, and utilities for the PRC Platform.",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"wordpress/mcp-adapter": "^0.1.0",
+		"wordpress/abilities-api": "^0.1.1",
+		"wordpress/php-ai-client": "^0.1.0",
+		"automattic/jetpack-autoloader": "^5.0",
+		"gnews-io/gnews-io-php": "^2.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"automattic/jetpack-autoloader": true,
+			"php-http/discovery": true
+		}
+	}
+}

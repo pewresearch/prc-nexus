@@ -9,13 +9,13 @@ import { createHigherOrderComponent } from '@wordpress/compose';
 /**
  * Internal Dependencies
  */
-import { CopilotToolbarMenu } from './toolbar';
+import { NexusToolbarMenu } from './toolbar';
 
 const ALLOWED_BLOCKS = ['prc-block/table', 'prc-quiz/controller'];
 
-const withPRCCopilotToolbarControls = createHigherOrderComponent(
+const withPRCNexusToolbarControls = createHigherOrderComponent(
 	(BlockEdit) =>
-		function CopilotToolbarControls(props) {
+		function NexusToolbarControls(props) {
 			const { name, attributes, setAttributes, clientId } = props;
 
 			const pilotLight = useSelect(
@@ -41,7 +41,7 @@ const withPRCCopilotToolbarControls = createHigherOrderComponent(
 			return (
 				<>
 					<BlockControls group="other">
-						<CopilotToolbarMenu
+						<NexusToolbarMenu
 							blockName={name}
 							clientId={clientId}
 							isReady={pilotLight}
@@ -51,17 +51,17 @@ const withPRCCopilotToolbarControls = createHigherOrderComponent(
 				</>
 			);
 		},
-	'withPRCCopilotToolbarControls'
+	'withPRCNexusToolbarControls'
 );
 
 /**
- * Add PRC Copilot Toolbar Controls to the prc-block/table block.
+ * Add PRC Nexus Toolbar Controls to the prc-block/table block.
  */
 function initToolbarControls() {
 	addFilter(
 		'editor.BlockEdit',
-		`prc-copilot-toolbar-controls`,
-		withPRCCopilotToolbarControls,
+		`prc-nexus-toolbar-controls`,
+		withPRCNexusToolbarControls,
 		100
 	);
 }

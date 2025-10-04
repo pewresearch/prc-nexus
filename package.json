@@ -1,27 +1,28 @@
 {
-    "name": "@prc/copilot",
-    "version": "1.0.0",
-    "description": "PRC Copilot is a collection of AI powered tools, UI components, and utilities for the PRC Platform.",
-    "main": "./src/index.js",
-    "scripts": {
-        "build": "wp-scripts build src/plugin.js --output-path=./build/plugin; wp-scripts build src/exports.js --output-path=./build/exports",
-        "start": "wp-scripts start src/plugin.js --output-path=./build/plugin",
-        "start:exports": "wp-scripts start src/exports.js --output-path=./build/exports",
-        "test": "wp-scripts test-playwright",
-        "test:env:start": "wp-env start",
-        "test:env:stop": "wp-env stop",
-        "test:env:clean": "wp-env clean all && wp-env start",
-        "test:env:destroy": "wp-env destroy"
-    },
-    "devDependencies": {
-        "@playwright/test": "^1.52.0",
-        "@wordpress/e2e-test-utils-playwright": "^1.23.0",
-        "@wordpress/env": "^10.23.0",
-        "@wordpress/scripts": "^30.16.0"
-    },
-    "dependencies": {
-        "@emotion/react": "^11.14.0",
-        "@emotion/styled": "^11.14.0",
-        "@wordpress/icons": "^10.23.0"
-    }
+	"name": "@prc/nexus",
+	"version": "1.0.0",
+	"description": "PRC Nexus is a collection of AI powered tools, UI components, and utilities for the PRC Platform.",
+	"main": "./src/index.js",
+	"scripts": {
+		"build": "wp-scripts build src/plugin.js --output-path=./build/plugin; wp-scripts build src/exports.js --output-path=./build/exports",
+		"start": "wp-scripts start src/plugin.js --output-path=./build/plugin",
+		"start:exports": "wp-scripts start src/exports.js --output-path=./build/exports",
+		"test": "wp-scripts test-playwright",
+		"test:env:start": "wp-env start",
+		"test:env:stop": "wp-env stop",
+		"test:env:clean": "wp-env clean all && wp-env start",
+		"test:env:destroy": "wp-env destroy",
+		"composer": "composer"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.52.0",
+		"@wordpress/e2e-test-utils-playwright": "^1.23.0",
+		"@wordpress/env": "^10.23.0",
+		"@wordpress/scripts": "^30.16.0"
+	},
+	"dependencies": {
+		"@emotion/react": "^11.14.0",
+		"@emotion/styled": "^11.14.0",
+		"@wordpress/icons": "^10.23.0"
+	}
 }

@@ -2,10 +2,10 @@
 /**
  * Plugin Activator
  *
- * @package PRC\Platform\Copilot
+ * @package PRC\Platform\Nexus
  */
 
-namespace PRC\Platform\Copilot;
+namespace PRC\Platform\Nexus;
 
 /**
  * Plugin Activator
@@ -20,8 +20,8 @@ class Plugin_Activator {
 
 		wp_mail(
 			DEFAULT_TECHNICAL_CONTACT,
-			'PRC Copilot Activated',
-			'The PRC Copilot plugin has been activated on ' . get_site_url()
+			'PRC Nexus Activated',
+			'The PRC Nexus plugin has been activated on ' . get_site_url()
 		);
 	}
 }

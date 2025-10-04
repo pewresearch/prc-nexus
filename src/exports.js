@@ -1,24 +1,24 @@
 import {
 	processToolRequest,
-	addToCopilotToolbar,
-	removeFromCopilotToolbar,
+	addToNexusToolbar,
+	removeFromNexusToolbar,
 	CandidatesModal,
 	RequestModal,
 	CandidatesButton,
 } from './';
 
 function loadScript(slug, script) {
-	if (!window.prcCopilot[slug]) {
-		window.prcCopilot[slug] = script;
+	if (!window.prcNexus[slug]) {
+		window.prcNexus[slug] = script;
 	}
 }
 
-window.prcCopilot = {};
+window.prcNexus = {};
 
 loadScript('processToolRequest', processToolRequest);
-loadScript('addToCopilotToolbar', addToCopilotToolbar);
-loadScript('removeFromCopilotToolbar', removeFromCopilotToolbar);
+loadScript('addToNexusToolbar', addToNexusToolbar);
+loadScript('removeFromNexusToolbar', removeFromNexusToolbar);
 loadScript('CandidatesModal', CandidatesModal);
 loadScript('RequestModal', RequestModal);
 loadScript('CandidatesButton', CandidatesButton);
-console.log('Loading @prc/copilot...', window.prcCopilot);
+console.log('Loading @prc/nexus...', window.prcNexus);

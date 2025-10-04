@@ -15,7 +15,7 @@ import { store as noticesStore } from '@wordpress/notices';
 import { generateTrackingData } from './tracking';
 
 /**
- * A candidate from a PRC Copilot tool request.
+ * A candidate from a PRC Nexus tool request.
  */
 interface Candidate {
 	modelVersion: string;
@@ -24,7 +24,7 @@ interface Candidate {
 }
 
 /**
- * The result of a PRC Copilot tool request.
+ * The result of a PRC Nexus tool request.
  */
 interface ProcessToolRequestResult {
 	candidates: any[];
@@ -32,7 +32,7 @@ interface ProcessToolRequestResult {
 }
 
 /**
- * Process a PRC Copilot tool request.
+ * Process a PRC Nexus tool request.
  *
  * @param prompt - The prompt to process.
  * @param tool - The tool to process.

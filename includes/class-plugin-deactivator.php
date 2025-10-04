@@ -2,9 +2,9 @@
 /**
  * Plugin Deactivator
  *
- * @package PRC\Platform\Copilot
+ * @package PRC\Platform\Nexus
  */
-namespace PRC\Platform\Copilot;
+namespace PRC\Platform\Nexus;
 
 /**
  * Plugin Deactivator

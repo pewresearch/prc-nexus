@@ -8,7 +8,7 @@ import { select } from '@wordpress/data';
  */
 
 /**
- * The tracking data for a PRC Copilot tool request.
+ * The tracking data for a PRC Nexus tool request.
  */
 interface TrackingData {
 	userId: number | undefined;
@@ -20,7 +20,7 @@ interface TrackingData {
 }
 
 /**
- * Generate tracking data for a PRC Copilot tool request.
+ * Generate tracking data for a PRC Nexus tool request.
  *
  * @param modelVersion - The version of the model used.
  * @param usageMetadata - The usage metadata for the tool request.

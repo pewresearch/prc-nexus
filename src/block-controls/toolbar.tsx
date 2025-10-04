@@ -22,11 +22,11 @@ import { CandidatesModal, RequestModal } from '../components';
 import { LoadingIcon } from '../components/loading';
 import { AI_COLORS } from '../constants';
 
-function addToCopilotToolbar(props) {
+function addToNexusToolbar(props) {
 	const { title, icon, toolType, tool, onRequest, onSelect } = props;
 	addFilter(
-		'prcCopilot.toolbarMenuItems',
-		'prc-copilot/extend-copilot-toolbar',
+		'prcNexus.toolbarMenuItems',
+		'prc-nexus/extend-nexus-toolbar',
 		(
 			items,
 			{
@@ -62,15 +62,15 @@ function addToCopilotToolbar(props) {
 	  );
 }
 
-function removeFromCopilotToolbar() {
+function removeFromNexusToolbar() {
 	removeFilter(
-		'prcCopilot.toolbarMenuItems',
-		'prc-copilot/extend-copilot-toolbar'
+		'prcNexus.toolbarMenuItems',
+		'prc-nexus/extend-nexus-toolbar'
 	);
 }
 
-function CopilotToolbarMenu({blockName, clientId, isReady}) {
-	console.log('CopilotToolbarMenu', blockName, clientId, isReady);
+function NexusToolbarMenu({blockName, clientId, isReady}) {
+		console.log('NexusToolbarMenu', blockName, clientId, isReady);
 	const [modalTitle, setModalTitle] = useState('');
 	const [modalDescription, setModalDescription] = useState('');
 	const [activeTool, setActiveTool] = useState(null);
@@ -85,7 +85,7 @@ function CopilotToolbarMenu({blockName, clientId, isReady}) {
 
 	// Allow other plugins to modify/add menu items
 	const menuItems : any = applyFilters(
-		'prcCopilot.toolbarMenuItems',
+		'prcNexus.toolbarMenuItems',
 		defaultMenuItems,
 		{
 			setActiveTool,
@@ -99,9 +99,9 @@ function CopilotToolbarMenu({blockName, clientId, isReady}) {
 
 	const label = useMemo(() => {
 		if ( !isReady ) {
-			return 'Connecting to PRC Copilot';
+			return 'Connecting to PRC Nexus';
 		}
-		return 'Copilot available tools for: ' + blockName;
+		return 'Nexus available tools for: ' + blockName;
 	}, [isReady, blockName]);
 
 	if ( !isReady ) {
@@ -118,7 +118,7 @@ function CopilotToolbarMenu({blockName, clientId, isReady}) {
 				label={label}
 				icon={<Sparkles purple />}
 				controls={menuItems}
-				className="prc-copilot__toolbar-menu"
+				className="prc-nexus__toolbar-menu"
 			/>
 			{requestModalOpen &&
 				<RequestModal
@@ -137,9 +137,9 @@ function CopilotToolbarMenu({blockName, clientId, isReady}) {
 }
 
 export {
-	addToCopilotToolbar,
-	removeFromCopilotToolbar,
-	CopilotToolbarMenu,
+	addToNexusToolbar,
+	removeFromNexusToolbar,
+	NexusToolbarMenu,
 };
 
-export default CopilotToolbarMenu;
+export default NexusToolbarMenu;

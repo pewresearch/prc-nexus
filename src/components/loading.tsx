@@ -43,7 +43,7 @@ export function LoadingMessage() {
 			</div>
 			<p style={{ margin: 0, color: AI_COLORS.text }}>
 				{__(
-					'PRC Copilot is working...',
+					'PRC Nexus is working...',
 					'prc-block-library'
 				)}
 			</p>
