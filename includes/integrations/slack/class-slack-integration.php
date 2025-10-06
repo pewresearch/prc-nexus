@@ -137,8 +137,22 @@ class Slack_Integration {
 		);
 
 		$settings = get_option( self::SETTINGS_KEY, $defaults );
+		$settings = wp_parse_args( $settings, $defaults );
 
-		return wp_parse_args( $settings, $defaults );
+		// Prefer constants over database settings for sensitive values.
+		if ( defined( 'PRC_PLATFORM_SLACK_SIGNING_SECRET' ) ) {
+			$settings['signing_secret'] = constant( 'PRC_PLATFORM_SLACK_SIGNING_SECRET' );
+		}
+
+		if ( defined( 'PRC_PLATFORM_SLACK_TOKEN' ) ) {
+			$settings['bot_token'] = constant( 'PRC_PLATFORM_SLACK_TOKEN' );
+		}
+
+		if ( defined( 'PRC_PLATFORM_SLACK_WORKSPACE_ID' ) ) {
+			$settings['workspace_id'] = constant( 'PRC_PLATFORM_SLACK_WORKSPACE_ID' );
+		}
+
+		return $settings;
 	}
 
 	/**
