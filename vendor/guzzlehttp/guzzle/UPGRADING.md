@@ -748,19 +748,19 @@ The following APIs and options have been marked as deprecated:
 - Marked 'request.params' for `Guzzle\Http\Client` as deprecated. Use `$client->setDefaultOption('params/{param_name}', 'value')`
 - Marked 'command.headers', 'command.response_body' and 'command.on_complete' as deprecated for AbstractCommand. These will work through Guzzle 4.0
 
-              $command = $client->getCommand('foo', array(
-                  'command.headers' => array('Test' => '123'),
-                  'command.response_body' => '/path/to/file'
-              ));
+                $command = $client->getCommand('foo', array(
+                    'command.headers' => array('Test' => '123'),
+                    'command.response_body' => '/path/to/file'
+                ));
 
-              // Should be changed to:
+                // Should be changed to:
 
-              $command = $client->getCommand('foo', array(
-                  'command.request_options' => array(
-                      'headers' => array('Test' => '123'),
-                      'save_as' => '/path/to/file'
-                  )
-              ));
+                $command = $client->getCommand('foo', array(
+                    'command.request_options' => array(
+                        'headers' => array('Test' => '123'),
+                        'save_as' => '/path/to/file'
+                    )
+                ));
 
 ### Interface changes
 
