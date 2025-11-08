@@ -30,10 +30,10 @@ class Assets {
 	 * @hook enqueue_block_editor_assets
 	 */
 	public function enqueue_plugin() {
-		$plugin_asset_file = include plugin_dir_path( __DIR__ ) . 'build/plugin/plugin.asset.php';
+		$plugin_asset_file = include plugin_dir_path( __DIR__ ) . 'build/plugin/index.asset.php';
 		wp_enqueue_script(
-			'prc-nexus-admin-plugin',
-			plugins_url( 'build/plugin/plugin.js', __DIR__ ),
+			'prc-nexus',
+			plugins_url( 'build/plugin/index.js', __DIR__ ),
 			$plugin_asset_file['dependencies'],
 			$plugin_asset_file['version'],
 			true
@@ -46,13 +46,13 @@ class Assets {
 	 * @hook wp_enqueue_scripts
 	 */
 	public function register_exports() {
-		$export_asset_file = include plugin_dir_path( __DIR__ ) . 'build/exports/exports.asset.php';
-		wp_register_script(
-			'prc-nexus',
-			plugins_url( 'build/exports/exports.js', __DIR__ ),
-			$export_asset_file['dependencies'],
-			$export_asset_file['version'],
-			true
-		);
+		// $export_asset_file = include plugin_dir_path( __DIR__ ) . 'build/exports/exports.asset.php';
+		// wp_register_script(
+		// 'prc-nexus',
+		// plugins_url( 'build/exports/exports.js', __DIR__ ),
+		// $export_asset_file['dependencies'],
+		// $export_asset_file['version'],
+		// true
+		// );
 	}
 }

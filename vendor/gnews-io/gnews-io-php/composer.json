@@ -1,9 +1,9 @@
 {
 	"name": "gnews-io/gnews-io-php",
-	"description": "A PHP client for the GNews.io API",
+	"description": "A PHP client for GNews API",
 	"type": "library",
 	"license": "MIT",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"autoload": {
 		"psr-4": {
 			"GNews\\": "src",
@@ -12,7 +12,7 @@
 	},
 	"authors": [
 		{
-			"name": "GNews.io",
+			"name": "GNews API",
 			"role": "Developer"
 		}
 	],

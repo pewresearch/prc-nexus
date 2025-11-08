@@ -7,7 +7,7 @@ $baseDir   = dirname($vendorDir);
 
 return array(
 	'WordPress\\AiClient\\' => array(
-		'version' => '0.1.0.0',
+		'version' => '0.2.0.0',
 		'path'    => array( $vendorDir . '/wordpress/php-ai-client/src' )
 	),
 	'WP\\MCP\\' => array(
@@ -51,15 +51,15 @@ return array(
 		'path'    => array( $vendorDir . '/guzzlehttp/guzzle/src' )
 	),
 	'GNews\\Tests\\' => array(
-		'version' => '2.0.0.0',
+		'version' => '2.1.0.0',
 		'path'    => array( $vendorDir . '/gnews-io/gnews-io-php/tests' )
 	),
 	'GNews\\' => array(
-		'version' => '2.0.0.0',
+		'version' => '2.1.0.0',
 		'path'    => array( $vendorDir . '/gnews-io/gnews-io-php/src' )
 	),
 	'Automattic\\Jetpack\\Autoloader\\' => array(
-		'version' => '5.0.10',
+		'version' => '5.0.11',
 		'path'    => array( $vendorDir . '/automattic/jetpack-autoloader/src' )
 	),
 );

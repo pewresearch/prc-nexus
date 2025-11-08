@@ -5,8 +5,8 @@
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"wordpress/mcp-adapter": "^0.1.0",
-		"wordpress/abilities-api": "^0.1.1",
-		"wordpress/php-ai-client": "^0.1.0",
+		"wordpress/abilities-api": "^0.4.0",
+		"wordpress/php-ai-client": "^0.2.0",
 		"automattic/jetpack-autoloader": "^5.0",
 		"gnews-io/gnews-io-php": "^2.0"
 	},

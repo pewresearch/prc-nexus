@@ -4,8 +4,10 @@
 	"description": "PRC Nexus is a collection of AI powered tools, UI components, and utilities for the PRC Platform.",
 	"main": "./src/index.js",
 	"scripts": {
-		"build": "wp-scripts build src/plugin.js --output-path=./build/plugin; wp-scripts build src/exports.js --output-path=./build/exports",
-		"start": "wp-scripts start src/plugin.js --output-path=./build/plugin",
+		"build": "wp-scripts build --output-path=./build/plugin; wp-scripts build src/exports.js --output-path=./build/exports",
+		"build:plugin": "wp-scripts build --output-path=./build/plugin",
+		"start:plugin": "wp-scripts start --output-path=./build/plugin",
+		"build:exports": "wp-scripts build src/exports.js --output-path=./build/exports",
 		"start:exports": "wp-scripts start src/exports.js --output-path=./build/exports",
 		"test": "wp-scripts test-playwright",
 		"test:env:start": "wp-env start",
@@ -23,6 +25,7 @@
 	"dependencies": {
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.0",
-		"@wordpress/icons": "^10.23.0"
+		"@wordpress/icons": "^11.00.0",
+		"turndown": "^7.2.1"
 	}
 }

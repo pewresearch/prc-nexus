@@ -3,6 +3,8 @@
 [_Part of the **AI Building Blocks for WordPress** initiative_
 ](https://make.wordpress.org/ai/2025/07/17/ai-building-blocks)
 
+[Handbook](https://make.wordpress.org/ai/handbook/projects/abilities-api/)
+
 ## Overview
 
 - **Purpose:** provide a common way for WordPress core, plugins, and themes to describe what they can do ("abilities") in a machine‑readable, human‑friendly form.
@@ -16,13 +18,10 @@
 3. **Security‑first** - explicit permissions determine who/what may invoke an ability.
 4. **Gradual adoption** - ships first as a Composer package, migrates smoothly to core.
 
-## Developer Documentation
+## Documentation
 
-- [Introduction](docs/1.intro.md)
-- [Getting Started](docs/2.getting-started.md)
-- [Registering Abilities](docs/3.registering-abilities.md)
-- [Using Abilities](docs/4.using-abilities.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
+- **[Developer docs](docs/README.md)**.
+- **[Contributing Guidelines](CONTRIBUTING.md)**.
 
 ## Inspiration
 
@@ -32,19 +31,21 @@
 
 ## Current Status
 
-| Milestone                           | State       |
+| Milestones                          | State       |
 | ----------------------------------- | ----------- |
 | Placeholder repository              | **created** |
-| Spec draft                          | in progress |
-| Prototype plugin & Composer package | in progress |
-| Community feedback (#core‑ai Slack) | planned     |
-| Core proposal                       | planned     |
+| Spec draft                          | **created** |
+| Prototype plugin & Composer package | **created** |
+| Community feedback (#core‑ai Slack) | **created** |
+| Core proposal                       | in progress |
+| Initial                             | **created** |
+| WordPress 6.9                       | in progress |
 
 ## How to Get Involved
 
 - **Discuss:** `#core-ai` channel on WordPress Slack.
 - **File issues:** suggestions & use‑cases welcome in this repo.
-- **Prototype:** experiment with the upcoming Composer package once released.
+- **Prototype:** experiment with the [feature plugin](https://github.com/WordPress/abilities-api/releases/latest) or the [`wordpress/abilities-api`](https://packagist.org/packages/wordpress/abilities-api) Composer package.
 
 ## License
 

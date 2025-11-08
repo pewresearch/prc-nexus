@@ -30,7 +30,7 @@ class Trending_News_Analysis {
 	public function __construct( $loader = null ) {
 		require_once plugin_dir_path( __FILE__ ) . 'class-cli-command.php';
 		if ( null !== $loader ) {
-			$loader->add_action( 'abilities_api_init', $this, 'register_ability' );
+			$loader->add_action( 'wp_abilities_api_init', $this, 'register_ability' );
 			return;
 		}
 	}
@@ -67,6 +67,7 @@ class Trending_News_Analysis {
 			array(
 				'label'               => __( 'Analyze Trending News', 'prc-nexus' ),
 				'description'         => __( 'Analyzes trending news, identifies trending topics, and suggests writing prompts.', 'prc-nexus' ),
+				'category'            => 'data-analysis',
 				'input_schema'        => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -115,8 +116,17 @@ class Trending_News_Analysis {
 						),
 					),
 				),
+				'meta'                => array(
+					'annotations'  => array(
+						'instructions' => 'This ability fetches trending news, filters out crime/accident stories, deduplicates similar articles, extracts relevant categories, finds related PRC content, ranks by importance, and generates story angle suggestions. The process involves multiple AI analysis steps and may take several seconds to complete.',
+						'readonly'     => true,
+						'destructive'  => false,
+						'idempotent'   => false,
+					),
+					'show_in_rest' => true,
+				),
 				'execute_callback'    => array( $this, 'perform_trending_news_analysis' ),
-				'permission_callback' => function ( $input ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+				'permission_callback' => function () { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 					return current_user_can( 'manage_options' );
 				},
 			)
@@ -283,6 +293,42 @@ class Trending_News_Analysis {
 	}
 
 	/**
+	 * Filter out crime/accident news and deduplicate similar stories using AI.
+	 *
+	 * @param array $trending_news List of trending news articles.
+	 * @return array Filtered and deduplicated stories.
+	 */
+	private function filter_and_deduplicate_stories( $trending_news ) {
+		$news_data = wp_json_encode( $trending_news );
+
+		$filter_prompt = wp_sprintf(
+			'Analyze this list of news stories and perform two tasks:
+			1. Remove any stories about crimes, accidents, or purely negative local incidents (robberies, car crashes, arrests, etc.)
+			2. Identify and remove duplicate stories (same event covered by different sources - keep only the most comprehensive version)
+
+			Return ONLY a JSON array of the filtered stories in the same format as provided. Keep stories about policy, politics, economy, technology, science, health, business, international affairs, and other topics of national interest.
+
+			NEWS STORIES: %s',
+			$news_data
+		);
+
+		$filtered_response = AiClient::prompt( $filter_prompt )
+			->usingTemperature( 0.2 )
+			->asJsonResponse()
+			->generateText();
+
+		$filtered_stories = json_decode( $filtered_response, true );
+
+		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $filtered_stories ) ) {
+			error_log( 'Failed to filter stories, returning original list' ); // phpcs:ignore
+			return $trending_news;
+		}
+
+		error_log( wp_sprintf( 'Filtered from %d to %d stories', count( $trending_news ), count( $filtered_stories ) ) ); // phpcs:ignore
+		return $filtered_stories;
+	}
+
+	/**
 	 * Get related posts for given category IDs.
 	 *
 	 * @param array $category_ids List of category term IDs.
@@ -373,6 +419,50 @@ class Trending_News_Analysis {
 	}
 
 	/**
+	 * Rank stories by importance to the United States public using AI.
+	 *
+	 * @param array $stories List of enriched stories.
+	 * @param int   $limit Number of top stories to keep.
+	 * @return array Stories ranked and limited by importance.
+	 */
+	private function rank_stories_by_importance( $stories, $limit ) {
+		$stories_data = wp_json_encode( $stories );
+
+		$ranking_prompt = wp_sprintf(
+			'Analyze these news stories and rank them from most to least important to the United States public. Consider factors like:
+			- National impact and relevance
+			- Number of people affected
+			- Policy implications
+			- Economic significance
+			- Social and cultural importance
+			- Timeliness and urgency
+
+			Return ONLY a JSON array of the stories in order from most to least important, maintaining the exact same structure as provided.
+
+			STORIES: %s',
+			$stories_data
+		);
+
+		$ranked_response = AiClient::prompt( $ranking_prompt )
+			->usingTemperature( 0.2 )
+			->asJsonResponse()
+			->generateText();
+
+		$ranked_stories = json_decode( $ranked_response, true );
+
+		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $ranked_stories ) ) {
+			error_log( 'Failed to rank stories, returning original list' ); // phpcs:ignore
+			return array_slice( $stories, 0, $limit );
+		}
+
+		// Limit to the requested number of stories.
+		$limited_stories = array_slice( $ranked_stories, 0, $limit );
+		error_log( wp_sprintf( 'Ranked and limited from %d to %d stories', count( $ranked_stories ), count( $limited_stories ) ) ); // phpcs:ignore
+
+		return $limited_stories;
+	}
+
+	/**
 	 * Analyze a single story using AI.
 	 *
 	 * @param array $story Story data with related posts.
@@ -428,7 +518,7 @@ class Trending_News_Analysis {
 		}
 
 		error_log( wp_sprintf( 'Failed to decode JSON for story: %s', $story_title ) ); // phpcs:ignore
-		// error_log( 'Response was: ' . $response ); // phpcs:ignore
+		// Uncomment for debugging: error_log( 'Response was: ' . $response );
 		return null;
 	}
 
@@ -556,8 +646,9 @@ class Trending_News_Analysis {
 		// Get category dictionary.
 		$category_dictionary = $this->get_category_dictionary();
 
-		// Get trending news.
-		$trending_news = $this->get_trending_news( $category, $total, $from, $to, $query );
+		// Get trending news (fetch 3x the requested amount for filtering).
+		$fetch_count   = $total * 3;
+		$trending_news = $this->get_trending_news( $category, $fetch_count, $from, $to, $query );
 
 		if ( empty( $trending_news ) ) {
 			return array(
@@ -565,14 +656,26 @@ class Trending_News_Analysis {
 			);
 		}
 
+		// Filter out crime/accident news and deduplicate similar stories.
+		$filtered_news = $this->filter_and_deduplicate_stories( $trending_news );
+
+		if ( empty( $filtered_news ) ) {
+			return array(
+				'error' => 'No relevant news stories after filtering',
+			);
+		}
+
 		// Extract categories from news.
-		$stories_with_categories = $this->extract_categories_from_news( $trending_news, $category_dictionary );
+		$stories_with_categories = $this->extract_categories_from_news( $filtered_news, $category_dictionary );
 
 		// Enrich stories with related posts.
 		$enriched_stories = $this->enrich_stories_with_related_posts( $stories_with_categories );
 
+		// Rank stories by importance and limit to requested count.
+		$ranked_stories = $this->rank_stories_by_importance( $enriched_stories, $total );
+
 		// Analyze stories.
-		$final_analysis = $this->analyze_stories( $enriched_stories );
+		$final_analysis = $this->analyze_stories( $ranked_stories );
 
 		// Format response based on output_format parameter.
 		if ( 'markdown' === $output_format ) {

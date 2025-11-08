@@ -67,5 +67,5 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 			}
 		}
 	}
-	\WP_CLI::add_command( 'prc trending-news-analysis', __NAMESPACE__ . '\Trending_News_Analysis_Command' );
+	\WP_CLI::add_command( 'prc nexus trending-news', __NAMESPACE__ . '\Trending_News_Analysis_Command' );
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace WordPress\AiClient\Builders;
 
-use InvalidArgumentException;
-use RuntimeException;
+use WordPress\AiClient\Common\Exception\InvalidArgumentException;
+use WordPress\AiClient\Common\Exception\RuntimeException;
 use WordPress\AiClient\Files\DTO\File;
 use WordPress\AiClient\Files\Enums\FileTypeEnum;
 use WordPress\AiClient\Messages\DTO\Message;
@@ -15,10 +15,10 @@ use WordPress\AiClient\Messages\Enums\MessageRoleEnum;
 use WordPress\AiClient\Messages\Enums\ModalityEnum;
 use WordPress\AiClient\Providers\Models\Contracts\ModelInterface;
 use WordPress\AiClient\Providers\Models\DTO\ModelConfig;
+use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use WordPress\AiClient\Providers\Models\DTO\ModelRequirements;
 use WordPress\AiClient\Providers\Models\DTO\RequiredOption;
 use WordPress\AiClient\Providers\Models\Enums\CapabilityEnum;
-use WordPress\AiClient\Providers\Models\Enums\OptionEnum;
 use WordPress\AiClient\Providers\Models\ImageGeneration\Contracts\ImageGenerationModelInterface;
 use WordPress\AiClient\Providers\Models\SpeechGeneration\Contracts\SpeechGenerationModelInterface;
 use WordPress\AiClient\Providers\Models\TextGeneration\Contracts\TextGenerationModelInterface;
@@ -59,6 +59,11 @@ class PromptBuilder
      * @var ModelInterface|null The model to use for generation.
      */
     protected ?ModelInterface $model = null;
+
+    /**
+     * @var list<string> Ordered list of preference keys to check when selecting a model.
+     */
+    protected array $modelPreferenceKeys = [];
 
     /**
      * @var string|null The provider ID or class name.
@@ -217,9 +222,73 @@ class PromptBuilder
     }
 
     /**
-     * Sets the model configuration.
+     * Sets preferred models to evaluate in order.
      *
-     * Merges the provided configuration with the builder's configuration,
+     * @since 0.2.0
+     *
+     * @param string|ModelInterface|array{0:string,1:string} ...$preferredModels The preferred models as model IDs,
+     * model instances, or [model ID, provider ID] tuples.
+     * @return self
+     *
+     * @throws InvalidArgumentException When a preferred model has an invalid type or identifier.
+     */
+    public function usingModelPreference(...$preferredModels): self
+    {
+        if ($preferredModels === []) {
+            throw new InvalidArgumentException('At least one model preference must be provided.');
+        }
+
+        $preferenceKeys = [];
+
+        foreach ($preferredModels as $preferredModel) {
+            if (is_array($preferredModel)) {
+                // [model identifier, provider ID] tuple
+                if (!array_is_list($preferredModel) || count($preferredModel) !== 2) {
+                    throw new InvalidArgumentException(
+                        'Model preference tuple must contain model identifier and provider ID.'
+                    );
+                }
+
+                [$providerId, $modelId] = $preferredModel;
+
+                $modelId = $this->normalizePreferenceIdentifier($modelId);
+                $providerId = $this->normalizePreferenceIdentifier(
+                    $providerId,
+                    'Model preference provider identifiers cannot be empty.'
+                );
+
+                $preferenceKey = $this->createProviderModelPreferenceKey($providerId, $modelId);
+            } elseif ($preferredModel instanceof ModelInterface) {
+                // Model instance
+                $modelId = $preferredModel->metadata()->getId();
+                $providerId = $preferredModel->providerMetadata()->getId();
+
+                $preferenceKey = $this->createProviderModelPreferenceKey($providerId, $modelId);
+            } elseif (is_string($preferredModel)) {
+                // Model ID
+                $modelId = $this->normalizePreferenceIdentifier($preferredModel);
+
+                $preferenceKey = $this->createModelPreferenceKey($modelId);
+            } else {
+                // Invalid type
+                throw new InvalidArgumentException(
+                    'Model preferences must be model identifiers, instances of ModelInterface, ' .
+                    'or provider/model tuples.'
+                );
+            }
+
+            $preferenceKeys[] = $preferenceKey;
+        }
+
+        $this->modelPreferenceKeys = $preferenceKeys;
+
+        return $this;
+    }
+
+    /**
+         * Sets the model configuration.
+         *
+         * Merges the provided configuration with the builder's configuration,
      * with builder configuration taking precedence.
      *
      * @since 0.1.0
@@ -510,79 +579,6 @@ class PromptBuilder
         return $this;
     }
 
-    /**
-     * Gets the inferred model requirements based on prompt features.
-     *
-     * @since 0.1.0
-     *
-     * @param CapabilityEnum $capability The capability the model must support.
-     * @return ModelRequirements The inferred requirements.
-     */
-    private function getModelRequirements(CapabilityEnum $capability): ModelRequirements
-    {
-        $capabilities = [$capability];
-        $inputModalities = [];
-
-        // Check if we have chat history (multiple messages)
-        if (count($this->messages) > 1) {
-            $capabilities[] = CapabilityEnum::chatHistory();
-        }
-
-        // Analyze all messages to determine required input modalities
-        $hasFunctionMessageParts = false;
-        foreach ($this->messages as $message) {
-            foreach ($message->getParts() as $part) {
-                // Check for text input
-                if ($part->getType()->isText()) {
-                    $inputModalities[] = ModalityEnum::text();
-                }
-
-                // Check for file inputs
-                if ($part->getType()->isFile()) {
-                    $file = $part->getFile();
-
-                    if ($file !== null) {
-                        if ($file->isImage()) {
-                            $inputModalities[] = ModalityEnum::image();
-                        } elseif ($file->isAudio()) {
-                            $inputModalities[] = ModalityEnum::audio();
-                        } elseif ($file->isVideo()) {
-                            $inputModalities[] = ModalityEnum::video();
-                        } elseif ($file->isDocument() || $file->isText()) {
-                            $inputModalities[] = ModalityEnum::document();
-                        }
-                    }
-                }
-
-                // Check for function calls/responses (these might require special capabilities)
-                if ($part->getType()->isFunctionCall() || $part->getType()->isFunctionResponse()) {
-                    $hasFunctionMessageParts = true;
-                }
-            }
-        }
-
-        // Build required options from ModelConfig
-        $requiredOptions = $this->modelConfig->toRequiredOptions();
-
-        if ($hasFunctionMessageParts) {
-            // Add function declarations option if we have function calls/responses
-            $requiredOptions = $this->includeInRequiredOptions(
-                $requiredOptions,
-                new RequiredOption(OptionEnum::functionDeclarations(), true)
-            );
-        }
-
-        // Add input modalities if we have any inputs
-        $requiredOptions = $this->includeInRequiredOptions(
-            $requiredOptions,
-            new RequiredOption(OptionEnum::inputModalities(), $inputModalities)
-        );
-
-        return new ModelRequirements(
-            $capabilities,
-            $requiredOptions
-        );
-    }
 
     /**
      * Infers the capability from configured output modalities.
@@ -671,11 +667,11 @@ class PromptBuilder
         }
 
         // Build requirements with the specified capability
-        $requirements = $this->getModelRequirements($intendedCapability);
+        $requirements = ModelRequirements::fromPromptData($intendedCapability, $this->messages, $this->modelConfig);
 
         // If the model has been set, check if it meets the requirements
         if ($this->model !== null) {
-            return $this->model->metadata()->meetsRequirements($requirements);
+            return $requirements->areMetBy($this->model->metadata());
         }
 
         try {
@@ -1112,69 +1108,176 @@ class PromptBuilder
      */
     private function getConfiguredModel(CapabilityEnum $capability): ModelInterface
     {
-        $requirements = $this->getModelRequirements($capability);
+        $requirements = ModelRequirements::fromPromptData($capability, $this->messages, $this->modelConfig);
 
-        // If a model has been explicitly set, return it
         if ($this->model !== null) {
+            // Explicit model was provided via usingModel(); just update config and bind dependencies.
             $this->model->setConfig($this->modelConfig);
             $this->registry->bindModelDependencies($this->model);
             return $this->model;
         }
 
-        // Find a suitable model based on requirements
-        if ($this->providerIdOrClassName === null) {
-            $providerModelsMetadata = $this->registry->findModelsMetadataForSupport($requirements);
+        // Retrieve the candidate models map which satisfies the requirements.
+        $candidateMap = $this->getCandidateModelsMap($requirements);
 
-            if (empty($providerModelsMetadata)) {
-                throw new InvalidArgumentException(
-                    sprintf(
-                        'No models found that support the required capabilities and options for this prompt. ' .
-                        'Required capabilities: %s. Required options: %s',
-                        implode(', ', array_map(function ($cap) {
-                            return $cap->value;
-                        }, $requirements->getRequiredCapabilities())),
-                        implode(', ', array_map(function ($opt) {
-                            return $opt->getName()->value . '=' . json_encode($opt->getValue());
-                        }, $requirements->getRequiredOptions()))
-                    )
-                );
-            }
-
-            $firstProviderModels = $providerModelsMetadata[0];
-            $provider = $firstProviderModels->getProvider()->getId();
-            $modelMetadata = $firstProviderModels->getModels()[0];
-        } else {
-            $modelsMetadata = $this->registry->findProviderModelsMetadataForSupport(
-                $this->providerIdOrClassName,
-                $requirements
+        if (empty($candidateMap)) {
+            $message = sprintf(
+                'No models found that support %s for this prompt.',
+                $capability->value
             );
 
-            if (empty($modelsMetadata)) {
-                throw new InvalidArgumentException(
-                    sprintf(
-                        'No models found for %s that support the required capabilities and options for this prompt. ' .
-                        'Required capabilities: %s. Required options: %s',
-                        $this->providerIdOrClassName,
-                        implode(', ', array_map(function ($cap) {
-                            return $cap->value;
-                        }, $requirements->getRequiredCapabilities())),
-                        implode(', ', array_map(function ($opt) {
-                            return $opt->getName()->value . '=' . json_encode($opt->getValue());
-                        }, $requirements->getRequiredOptions()))
-                    )
+            if ($this->providerIdOrClassName !== null) {
+                $message = sprintf(
+                    'No models found for provider "%s" that support %s for this prompt.',
+                    $this->providerIdOrClassName,
+                    $capability->value
                 );
             }
 
-            $provider = $this->providerIdOrClassName;
-            $modelMetadata = $modelsMetadata[0];
+            throw new InvalidArgumentException($message);
         }
 
-        // Get the model instance from the provider
-        return $this->registry->getProviderModel(
-            $provider,
-            $modelMetadata->getId(),
-            $this->modelConfig
+        // Check if any preferred models match the candidates, in priority order.
+        if (!empty($this->modelPreferenceKeys)) {
+            // Find preferences that match available candidates, preserving preference order.
+            $matchingPreferences = array_intersect_key(
+                array_flip($this->modelPreferenceKeys),
+                $candidateMap
+            );
+
+            if (!empty($matchingPreferences)) {
+                // Get the first matching preference key
+                $firstMatchKey = key($matchingPreferences);
+                [$providerId, $modelId] = $candidateMap[$firstMatchKey];
+
+                return $this->registry->getProviderModel($providerId, $modelId, $this->modelConfig);
+            }
+        }
+
+        // No preference matched; fall back to the first candidate discovered.
+        [$providerId, $modelId] = reset($candidateMap);
+
+        return $this->registry->getProviderModel($providerId, $modelId, $this->modelConfig);
+    }
+
+    /**
+     * Builds a map of candidate models that satisfy the requirements for efficient lookup.
+     *
+     * @since 0.2.0
+     *
+     * @param ModelRequirements $requirements The requirements derived from the prompt.
+     * @return array<string, array{0:string,1:string}> Map of preference keys to [providerId, modelId] tuples.
+     */
+    private function getCandidateModelsMap(ModelRequirements $requirements): array
+    {
+        if ($this->providerIdOrClassName === null) {
+            // No provider locked in, gather all models across providers that meet requirements.
+            $providerModelsMetadata = $this->registry->findModelsMetadataForSupport($requirements);
+
+            $candidateMap = [];
+            foreach ($providerModelsMetadata as $providerModels) {
+                $providerId = $providerModels->getProvider()->getId();
+                $providerMap = $this->generateMapFromCandidates($providerId, $providerModels->getModels());
+
+                // Use + operator to merge, preserving keys from $candidateMap (first provider wins for model-only keys)
+                $candidateMap = $candidateMap + $providerMap;
+            }
+
+            return $candidateMap;
+        }
+
+        // Provider set, only consider models from that provider.
+        $modelsMetadata = $this->registry->findProviderModelsMetadataForSupport(
+            $this->providerIdOrClassName,
+            $requirements
         );
+
+        // Ensure we pass the provider ID, not the class name
+        $providerId = $this->registry->getProviderId($this->providerIdOrClassName);
+
+        return $this->generateMapFromCandidates($providerId, $modelsMetadata);
+    }
+
+    /**
+     * Generates a candidate map from model metadata with both provider-specific and model-only keys.
+     *
+     * @since 0.2.0
+     *
+     * @param string $providerId The provider ID.
+     * @param list<ModelMetadata> $modelsMetadata The models metadata to map.
+     * @return array<string, array{0:string,1:string}> Map of preference keys to [providerId, modelId] tuples.
+     */
+    private function generateMapFromCandidates(string $providerId, array $modelsMetadata): array
+    {
+        $map = [];
+
+        foreach ($modelsMetadata as $modelMetadata) {
+            $modelId = $modelMetadata->getId();
+
+            // Add provider-specific key
+            $providerModelKey = $this->createProviderModelPreferenceKey($providerId, $modelId);
+            $map[$providerModelKey] = [$providerId, $modelId];
+
+            // Add model-only key
+            $modelKey = $this->createModelPreferenceKey($modelId);
+            $map[$modelKey] = [$providerId, $modelId];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Normalizes and validates a preference identifier string.
+     *
+     * @since 0.2.0
+     *
+     * @param mixed $value The value to normalize.
+     * @param string $emptyMessage The message for empty or invalid values.
+     * @return string The normalized identifier.
+     *
+     * @throws InvalidArgumentException If the value is not a non-empty string.
+     */
+    private function normalizePreferenceIdentifier(
+        $value,
+        string $emptyMessage = 'Model preference identifiers cannot be empty.'
+    ): string {
+        if (!is_string($value)) {
+            throw new InvalidArgumentException($emptyMessage);
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            throw new InvalidArgumentException($emptyMessage);
+        }
+
+        return $trimmed;
+    }
+
+    /**
+     * Creates a preference key for a provider/model combination.
+     *
+     * @since 0.2.0
+     *
+     * @param string $providerId The provider identifier.
+     * @param string $modelId The model identifier.
+     * @return string The generated preference key.
+     */
+    private function createProviderModelPreferenceKey(string $providerId, string $modelId): string
+    {
+        return 'providerModel::' . $providerId . '::' . $modelId;
+    }
+
+    /**
+     * Creates a preference key for a model identifier.
+     *
+     * @since 0.2.0
+     *
+     * @param string $modelId The model identifier.
+     * @return string The generated preference key.
+     */
+    private function createModelPreferenceKey(string $modelId): string
+    {
+        return 'model::' . $modelId;
     }
 
     /**
@@ -1333,20 +1436,6 @@ class PromptBuilder
      * @param RequiredOption $option The option to potentially add.
      * @return list<RequiredOption> The updated list of required options.
      */
-    private function includeInRequiredOptions(array $options, RequiredOption $option): array
-    {
-        // Check if an option with the same name already exists
-        foreach ($options as $existingOption) {
-            if ($existingOption->getName()->equals($option->getName())) {
-                // Option already exists, return unchanged list
-                return $options;
-            }
-        }
-
-        // Add the new option
-        $options[] = $option;
-        return $options;
-    }
 
     /**
      * Includes output modalities if not already present.

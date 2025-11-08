@@ -22,12 +22,19 @@ class Generate_Tabular_Data {
 	public static $ability_name = 'prc-nexus/generate-tabular-data';
 
 	/**
+	 * Blocks that are allowed to use this ability.
+	 *
+	 * @var array
+	 */
+	public static $allowed_blocks = array( 'prc-block/table' );
+
+	/**
 	 * Constructor.
 	 *
 	 * @param object $loader The loader object.
 	 */
 	public function __construct( $loader ) {
-		$loader->add_action( 'abilities_api_init', $this, 'register_ability' );
+		$loader->add_action( 'wp_abilities_api_init', $this, 'register_ability' );
 	}
 
 	/**
@@ -41,20 +48,21 @@ class Generate_Tabular_Data {
 			array(
 				'label'               => __( 'Generate Tabular Data', 'prc-nexus' ),
 				'description'         => __( 'Generates tabular data in markdown format based on a prompt.', 'prc-nexus' ),
+				'category'            => 'data-retrieval',
 				'input_schema'        => array(
 					'type'                 => 'object',
 					'properties'           => array(
 						'data_description' => array(
 							'type'        => 'string',
-							'description' => 'A description of the data to get',
+							'description' => 'Description of data to retrieve and format as a table.',
 						),
 						'year_range_start' => array(
 							'type'        => 'number',
-							'description' => 'Start year of the data',
+							'description' => 'Start year of the data range (e.g., 2010).',
 						),
 						'year_range_end'   => array(
 							'type'        => 'number',
-							'description' => 'The end year of the data',
+							'description' => 'End year of the data range (e.g., 2020).',
 						),
 					),
 					'required'             => array( 'data_description' ),
@@ -77,6 +85,15 @@ class Generate_Tabular_Data {
 				'permission_callback' => function ( $input ) {
 					return current_user_can( 'manage_options' );
 				},
+				'meta'                => array(
+					'annotations'   => array(
+						'readonly'    => true,
+						'destructive' => false,
+						'idempotent'  => false,
+					),
+					'show_in_rest'  => true,
+					'allowedBlocks' => self::$allowed_blocks,
+				),
 			)
 		);
 	}
@@ -133,6 +150,9 @@ INSTRUCTIONS;
 		$year_range_end   = $input['year_range_end'] ?? null;
 
 		$search_term = \PRC\Platform\Nexus\Utils\refine_search_term( $data_description );
+		error_log( '--------------------------------------------' );//phpcs:ignore
+		error_log( 'AI_SEARCH_TERM: ' . print_r( $search_term, true ) );//phpcs:ignore
+		error_log( '--------------------------------------------' );// phpcs:ignore
 
 		if ( $search_term ) {
 			error_log("AI_SEARCH_TERM: $search_term");//phpcs:ignore
@@ -207,19 +227,26 @@ INSTRUCTIONS;
 				error_log( 'AI_PROMPT: ' . print_r( $prompt, true ) );//phpcs:ignore
 				error_log( '--------------------------------------------' );// phpcs:ignore
 
-				$table = AiClient::prompt( $prompt )
-					->usingSystemInstruction( $this->get_system_instructions() )
-					->usingTemperature( 0.3 )
-					->generateText();
+				// $table = AiClient::prompt( $prompt )
+				// ->usingSystemInstruction( $this->get_system_instructions() )
+				// ->usingTemperature( 0.3 )
+				// ->generateText();
+				$table = $prompt;
 
 				return array(
 					'source_urls' => $urls_to_check,
 					'table'       => $table,
 				);
 			} else {
+				error_log( '--------------------------------------------' );//phpcs:ignore
+				error_log( 'NO DATA FOUND' );//phpcs:ignore
+				error_log( '--------------------------------------------' );// phpcs:ignore
 				return array( 'error' => 'No data can be generated for request. No relevant posts found on Pew Research Center website.' );
 			}
 		}
+		error_log( '--------------------------------------------' );//phpcs:ignore
+		error_log( 'NO SEARCH TERM FOUND' );//phpcs:ignore
+		error_log( '--------------------------------------------' );// phpcs:ignore
 		return array( 'error' => 'No data can be generated for request. Unable to determine search term.' );
 	}
 }

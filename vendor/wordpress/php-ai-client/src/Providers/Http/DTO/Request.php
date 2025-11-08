@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace WordPress\AiClient\Providers\Http\DTO;
 
-use InvalidArgumentException;
 use JsonException;
+use Psr\Http\Message\RequestInterface;
 use WordPress\AiClient\Common\AbstractDataTransferObject;
+use WordPress\AiClient\Common\Exception\InvalidArgumentException;
 use WordPress\AiClient\Providers\Http\Collections\HeadersCollection;
 use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
 
@@ -18,11 +19,13 @@ use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
  *
  * @since 0.1.0
  *
+ * @phpstan-import-type RequestOptionsArrayShape from RequestOptions
  * @phpstan-type RequestArrayShape array{
  *     method: string,
  *     uri: string,
  *     headers: array<string, list<string>>,
- *     body?: string|null
+ *     body?: string|null,
+ *     options?: RequestOptionsArrayShape
  * }
  *
  * @extends AbstractDataTransferObject<RequestArrayShape>
@@ -33,6 +36,7 @@ class Request extends AbstractDataTransferObject
     public const KEY_URI = 'uri';
     public const KEY_HEADERS = 'headers';
     public const KEY_BODY = 'body';
+    public const KEY_OPTIONS = 'options';
 
     /**
      * @var HttpMethodEnum The HTTP method.
@@ -60,6 +64,11 @@ class Request extends AbstractDataTransferObject
     protected ?string $body = null;
 
     /**
+     * @var RequestOptions|null Request transport options.
+     */
+    protected ?RequestOptions $options = null;
+
+    /**
      * Constructor.
      *
      * @since 0.1.0
@@ -68,11 +77,17 @@ class Request extends AbstractDataTransferObject
      * @param string $uri The request URI.
      * @param array<string, string|list<string>> $headers The request headers.
      * @param string|array<string, mixed>|null $data The request data.
+     * @param RequestOptions|null $options The request transport options.
      *
      * @throws InvalidArgumentException If the URI is empty.
      */
-    public function __construct(HttpMethodEnum $method, string $uri, array $headers = [], $data = null)
-    {
+    public function __construct(
+        HttpMethodEnum $method,
+        string $uri,
+        array $headers = [],
+        $data = null,
+        ?RequestOptions $options = null
+    ) {
         if (empty($uri)) {
             throw new InvalidArgumentException('URI cannot be empty.');
         }
@@ -87,6 +102,8 @@ class Request extends AbstractDataTransferObject
         } elseif (is_array($data)) {
             $this->data = $data;
         }
+
+        $this->options = $options;
     }
 
     /**
@@ -281,6 +298,33 @@ class Request extends AbstractDataTransferObject
     }
 
     /**
+     * Gets the request options.
+     *
+     * @since 0.2.0
+     *
+     * @return RequestOptions|null Request transport options when configured.
+     */
+    public function getOptions(): ?RequestOptions
+    {
+        return $this->options;
+    }
+
+    /**
+     * Returns a new instance with the specified request options.
+     *
+     * @since 0.2.0
+     *
+     * @param RequestOptions|null $options The request options to apply.
+     * @return self A new instance with the options.
+     */
+    public function withOptions(?RequestOptions $options): self
+    {
+        $new = clone $this;
+        $new->options = $options;
+        return $new;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @since 0.1.0
@@ -310,6 +354,7 @@ class Request extends AbstractDataTransferObject
                     'type' => ['string'],
                     'description' => 'The request body.',
                 ],
+                self::KEY_OPTIONS => RequestOptions::getJsonSchema(),
             ],
             'required' => [self::KEY_METHOD, self::KEY_URI, self::KEY_HEADERS],
         ];
@@ -336,6 +381,13 @@ class Request extends AbstractDataTransferObject
             $array[self::KEY_BODY] = $body;
         }
 
+        if ($this->options !== null) {
+            $optionsArray = $this->options->toArray();
+            if (!empty($optionsArray)) {
+                $array[self::KEY_OPTIONS] = $optionsArray;
+            }
+        }
+
         return $array;
     }
 
@@ -352,7 +404,35 @@ class Request extends AbstractDataTransferObject
             HttpMethodEnum::from($array[self::KEY_METHOD]),
             $array[self::KEY_URI],
             $array[self::KEY_HEADERS] ?? [],
-            $array[self::KEY_BODY] ?? null
+            $array[self::KEY_BODY] ?? null,
+            isset($array[self::KEY_OPTIONS])
+                ? RequestOptions::fromArray($array[self::KEY_OPTIONS])
+                : null
         );
+    }
+
+    /**
+     * Creates a Request instance from a PSR-7 RequestInterface.
+     *
+     * @since 0.2.0
+     *
+     * @param RequestInterface $psrRequest The PSR-7 request to convert.
+     * @return self A new Request instance.
+     * @throws InvalidArgumentException If the HTTP method is not supported.
+     */
+    public static function fromPsrRequest(RequestInterface $psrRequest): self
+    {
+        $method = HttpMethodEnum::from($psrRequest->getMethod());
+        $uri = (string) $psrRequest->getUri();
+
+        // Convert PSR-7 headers to array format expected by our constructor
+        /** @var array<string, list<string>> $headers */
+        $headers = $psrRequest->getHeaders();
+
+        // Get body content
+        $body = $psrRequest->getBody()->getContents();
+        $bodyOrData = !empty($body) ? $body : null;
+
+        return new self($method, $uri, $headers, $bodyOrData);
     }
 }

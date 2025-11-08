@@ -28,6 +28,41 @@ class Abilities_Manager {
 	public function __construct( $loader ) {
 		$this->load_abilities( $loader );
 		$this->init_available_abilities( $loader );
+		$loader->add_action( 'wp_abilities_api_categories_init', $this, 'register_categories' );
+	}
+
+	public function register_categories() {
+		wp_register_ability_category(
+			'data-retrieval',
+			array(
+				'label'       => __( 'Data Retrieval', 'prc-nexus' ),
+				'description' => __( 'Nexus abilities that retrieve and return data.', 'prc-nexus' ),
+			)
+		);
+
+		wp_register_ability_category(
+			'data-modification',
+			array(
+				'label'       => __( 'Data Modification', 'prc-nexus' ),
+				'description' => __( 'Nexus abilities that modify data.', 'prc-nexus' ),
+			)
+		);
+
+		wp_register_ability_category(
+			'data-analysis',
+			array(
+				'label'       => __( 'Data Analysis', 'prc-nexus' ),
+				'description' => __( 'Nexus abilities that analyze data.', 'prc-nexus' ),
+			)
+		);
+
+		wp_register_ability_category(
+			'communication',
+			array(
+				'label'       => __( 'Communication', 'prc-nexus' ),
+				'description' => __( 'Nexus abilities that send messages or notifications.', 'prc-nexus' ),
+			)
+		);
 	}
 
 	/**
