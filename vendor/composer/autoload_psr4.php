@@ -7,7 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'WordPress\\AiClient\\' => array($vendorDir . '/wordpress/php-ai-client/src'),
-    'WP\\MCP\\' => array($vendorDir . '/wordpress/mcp-adapter/src'),
+    'WP\\MCP\\' => array($vendorDir . '/wordpress/mcp-adapter/includes'),
     'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-factory/src', $vendorDir . '/psr/http-message/src'),
     'Psr\\Http\\Client\\' => array($vendorDir . '/psr/http-client/src'),
     'Http\\Promise\\' => array($vendorDir . '/php-http/promise/src'),

@@ -3,7 +3,7 @@
         'name' => 'pewresearch/prc-nexus',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '41fe3f93d75817695fba374a77883f95d66ef3f3',
+        'reference' => '554cd697f1aae1138013b7cc7ef92c80927962f9',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'automattic/jetpack-autoloader' => array(
-            'pretty_version' => 'v5.0.11',
-            'version' => '5.0.11.0',
-            'reference' => '90bf7b3bc29cb7be74105ac99afab4c21bc47e29',
+            'pretty_version' => 'v5.0.12',
+            'version' => '5.0.12.0',
+            'reference' => 'e0b0c606afc67fecc0f5af647a5119ac11ed8238',
             'type' => 'composer-plugin',
             'install_path' => __DIR__ . '/../automattic/jetpack-autoloader',
             'aliases' => array(),
@@ -58,7 +58,7 @@
         'pewresearch/prc-nexus' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '41fe3f93d75817695fba374a77883f95d66ef3f3',
+            'reference' => '554cd697f1aae1138013b7cc7ef92c80927962f9',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -188,9 +188,9 @@
             'dev_requirement' => false,
         ),
         'wordpress/mcp-adapter' => array(
-            'pretty_version' => '0.1.0',
-            'version' => '0.1.0.0',
-            'reference' => '8144b9c48ca639bc97cc96da38f8bdd2a596bf37',
+            'pretty_version' => 'v0.3.0',
+            'version' => '0.3.0.0',
+            'reference' => '653ca8d95180b25809b1a1dc489d8305ec5beb63',
             'type' => 'library',
             'install_path' => __DIR__ . '/../wordpress/mcp-adapter',
             'aliases' => array(),

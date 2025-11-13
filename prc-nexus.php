@@ -10,9 +10,9 @@
  * @wordpress-plugin
  * Plugin Name:       PRC 🌀 Nexus
  * Plugin URI:        https://github.com/pewresearch/prc-nexus
- * Description:       AI services, abilities, and orchestration for PRC Platform.
- * Version:           0.1.0
- * Requires at least: 6.7
+ * Description:       PRC Nexus is a collection of AI powered tools, UI components, orchestration, and utilities for the PRC Platform.
+ * Version:           1.0.0
+ * Requires at least: 6.8
  * Requires PHP:      8.2
  * Author:            Seth Rubenstein
  * Author URI:        https://pewresearch.org
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 define( 'PRC_NEXUS_FILE', __FILE__ );
 define( 'PRC_NEXUS_DIR', __DIR__ );
-define( 'PRC_NEXUS_VERSION', '0.1.0' );
+define( 'PRC_NEXUS_VERSION', '1.0.0' );
 
 /**
  * The code that runs during plugin activation.

@@ -31,7 +31,6 @@ class Trending_News_Analysis {
 		require_once plugin_dir_path( __FILE__ ) . 'class-cli-command.php';
 		if ( null !== $loader ) {
 			$loader->add_action( 'wp_abilities_api_init', $this, 'register_ability' );
-			return;
 		}
 	}
 
@@ -59,7 +58,7 @@ class Trending_News_Analysis {
 	/**
 	 * Register the generate-tabular-data ability with WP abilities api.
 	 *
-	 * @hook abilities_api_init
+	 * @hook wp_abilities_api_init
 	 */
 	public function register_ability() {
 		$registered = wp_register_ability(
@@ -124,9 +123,13 @@ class Trending_News_Analysis {
 						'idempotent'   => false,
 					),
 					'show_in_rest' => true,
+					'mcp'          => array(
+						'public' => true,
+						'type'   => 'tool',
+					),
 				),
 				'execute_callback'    => array( $this, 'perform_trending_news_analysis' ),
-				'permission_callback' => function () { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
 				},
 			)
@@ -141,7 +144,7 @@ class Trending_News_Analysis {
 	public static function get_analysis_format() {
 		$sample_shape = array(
 			'title'       => 'The title of the trending news item',
-			'summary'     => '1 sentence summary of the news item',
+			'summary'     => 'One sentence summary of the news item',
 			'source'      => 'link to the original source of this trending news item',
 			'suggestions' => array(
 				array(

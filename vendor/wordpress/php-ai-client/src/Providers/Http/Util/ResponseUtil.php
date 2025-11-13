@@ -49,6 +49,7 @@ class ResponseUtil
 
         // 4xx Client Errors
         if ($statusCode >= 400 && $statusCode < 500) {
+			error_log( 'Throwing ClientException for status code: ' . $statusCode );
             throw ClientException::fromClientErrorResponse($response);
         }
 

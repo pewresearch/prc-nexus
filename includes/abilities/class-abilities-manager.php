@@ -26,11 +26,21 @@ class Abilities_Manager {
 	 * @param Loader $loader The loader.
 	 */
 	public function __construct( $loader ) {
-		$this->load_abilities( $loader );
+		$this->load_abilities();
 		$this->init_available_abilities( $loader );
+
 		$loader->add_action( 'wp_abilities_api_categories_init', $this, 'register_categories' );
+		add_action(
+			'init',
+			function () {
+				do_action( 'qm/debug', 'Initializing PRC Abilities: ' . print_r( $this->available_abilities, true ) );
+			}
+		);
 	}
 
+	/**
+	 * Register ability categories.
+	 */
 	public function register_categories() {
 		wp_register_ability_category(
 			'data-retrieval',
@@ -67,10 +77,8 @@ class Abilities_Manager {
 
 	/**
 	 * Load all the class-*<ability-name> abilities in the abilities folder.
-	 *
-	 * @param Loader $loader The loader.
 	 */
-	public function load_abilities( $loader ) {
+	public function load_abilities() {
 		$abilities_dir   = plugin_dir_path( __DIR__ ) . 'abilities/';
 		$ability_folders = array_filter(
 			scandir( $abilities_dir ),

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fd4ce97ee857fdb477fbae17fa34d0b3",
+    "content-hash": "c2ab482d1746d905e7f2ad13c28998c6",
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
-            "version": "v5.0.11",
+            "version": "v5.0.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Automattic/jetpack-autoloader.git",
-                "reference": "90bf7b3bc29cb7be74105ac99afab4c21bc47e29"
+                "reference": "e0b0c606afc67fecc0f5af647a5119ac11ed8238"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Automattic/jetpack-autoloader/zipball/90bf7b3bc29cb7be74105ac99afab4c21bc47e29",
-                "reference": "90bf7b3bc29cb7be74105ac99afab4c21bc47e29",
+                "url": "https://api.github.com/repos/Automattic/jetpack-autoloader/zipball/e0b0c606afc67fecc0f5af647a5119ac11ed8238",
+                "reference": "e0b0c606afc67fecc0f5af647a5119ac11ed8238",
                 "shasum": ""
             },
             "require": {
@@ -25,7 +25,7 @@
                 "php": ">=7.2"
             },
             "require-dev": {
-                "automattic/jetpack-changelogger": "^6.0.7",
+                "automattic/jetpack-changelogger": "^6.0.8",
                 "automattic/phpunit-select-config": "^1.0.3",
                 "composer/composer": "^2.2",
                 "yoast/phpunit-polyfills": "^4.0.0"
@@ -67,9 +67,9 @@
                 "wordpress"
             ],
             "support": {
-                "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.11"
+                "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.12"
             },
-            "time": "2025-10-06T10:32:52+00:00"
+            "time": "2025-11-10T21:33:06+00:00"
         },
         {
             "name": "gnews-io/gnews-io-php",
@@ -1031,35 +1031,48 @@
         },
         {
             "name": "wordpress/mcp-adapter",
-            "version": "0.1.0",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/WordPress/mcp-adapter.git",
-                "reference": "8144b9c48ca639bc97cc96da38f8bdd2a596bf37"
+                "reference": "653ca8d95180b25809b1a1dc489d8305ec5beb63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/8144b9c48ca639bc97cc96da38f8bdd2a596bf37",
-                "reference": "8144b9c48ca639bc97cc96da38f8bdd2a596bf37",
+                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/653ca8d95180b25809b1a1dc489d8305ec5beb63",
+                "reference": "653ca8d95180b25809b1a1dc489d8305ec5beb63",
                 "shasum": ""
             },
             "require": {
-                "automattic/jetpack-autoloader": "^5.0",
-                "php": ">=8.1"
+                "php": "^7.4 || ^8.0"
             },
             "require-dev": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-                "phpcompatibility/php-compatibility": "^9.3",
+                "automattic/vipwpcs": "^3.0",
+                "php-stubs/wp-cli-stubs": "^2.12",
+                "phpcompatibility/php-compatibility": "10.x-dev as 9.99.99",
                 "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpstan/extension-installer": "^1.3",
+                "phpstan/php-8-stubs": "^0.4.24",
+                "phpstan/phpstan": "^2.1.22",
+                "phpstan/phpstan-deprecation-rules": "^2.0.3",
                 "phpunit/phpunit": "^9.6",
-                "squizlabs/php_codesniffer": "^3.10",
-                "wp-coding-standards/wpcs": "^3.1",
-                "yoast/phpunit-polyfills": "^1.0"
+                "slevomat/coding-standard": "^8.0",
+                "szepeviktor/phpstan-wordpress": "^2.0",
+                "wp-phpunit/wp-phpunit": "^6.5",
+                "wpackagist-plugin/plugin-check": "^1.6",
+                "yoast/phpunit-polyfills": "^4.0"
             },
             "type": "library",
+            "extra": {
+                "installer-paths": {
+                    "vendor/{$vendor}/{$name}/": [
+                        "wpackagist-plugin/plugin-check"
+                    ]
+                }
+            },
             "autoload": {
                 "psr-4": {
-                    "WP\\MCP\\": "src"
+                    "WP\\MCP\\": "includes/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1068,17 +1081,11 @@
             ],
             "authors": [
                 {
-                    "name": "WordPress Team",
-                    "homepage": "https://wordpress.org"
-                },
-                {
-                    "name": "Ovidiu Iulian Galatan",
-                    "email": "ovidiu.galatan@automattic.com",
-                    "homepage": "https://automattic.com",
-                    "role": "Code Wrangler @ Automattic"
+                    "name": "WordPress AI Team",
+                    "homepage": "https://make.wordpress.org/ai/"
                 }
             ],
-            "description": "Adapter for abilities api, letting the abilities to be used as MCP tools, resources or prompts",
+            "description": "Adapter for Abilities API, letting WordPress abilities to be used as MCP tools, resources or prompts",
             "homepage": "https://github.com/wordpress/mcp-adapter",
             "keywords": [
                 "abilities-api",
@@ -1091,11 +1098,10 @@
                 "wordpress"
             ],
             "support": {
-                "docs": "https://github.com/wordpress/mcp-adapter/tree/main/docs",
                 "issues": "https://github.com/wordpress/mcp-adapter/issues",
                 "source": "https://github.com/wordpress/mcp-adapter"
             },
-            "time": "2025-08-14T09:43:20+00:00"
+            "time": "2025-11-06T14:56:51+00:00"
         },
         {
             "name": "wordpress/php-ai-client",

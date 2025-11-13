@@ -6,7 +6,12 @@ import { useState, useEffect, useMemo } from '@wordpress/element';
 import { BlockControls, InspectorControls } from '@wordpress/block-editor';
 import { addFilter } from '@wordpress/hooks';
 import { createHigherOrderComponent } from '@wordpress/compose';
-import { ToolbarDropdownMenu, ToolbarButton, Modal, TextControl } from '@wordpress/components';
+import {
+	ToolbarDropdownMenu,
+	ToolbarButton,
+	Modal,
+	TextControl,
+} from '@wordpress/components';
 // import { getAbilities, executeAbility } from `@wordpress/abilities`;
 
 /**
@@ -21,25 +26,37 @@ function AbilitiesToolbarDropdownMenu(props) {
 	}
 	return (
 		<BlockControls group="other">
-			<ToolbarDropdownMenu icon={<Sparkles purple />} label="Nexus" controls={abilitiesList.map(ability => {
-				return {
-					title: ability.label,
-					text: ability.label,
-					icon: <Sparkles purple />,
-					onClick: () => {
-						console.log("Executing ability", ability.name);
-						window.wp.abilities.executeAbility(ability.name, {
-							data_description: "Public approval of abortion for the last 10 years"
-						}).then(result => {
-							console.log("Ability executed!!", result);
-						}).catch(error => {
-							console.error("Error executing ability", error);
-						}).finally(() => {
-							console.log("Ability execution completed");
-						});
-					}
-				}
-			})}/>
+			<ToolbarDropdownMenu
+				icon={<Sparkles purple />}
+				label="Nexus"
+				controls={abilitiesList.map((ability) => {
+					return {
+						title: ability.label,
+						text: ability.label,
+						icon: <Sparkles purple />,
+						onClick: () => {
+							console.log('Executing ability', ability.name);
+							window.wp.abilities
+								.executeAbility(ability.name, {
+									data_description:
+										'Public approval of abortion for the last 10 years',
+								})
+								.then((result) => {
+									console.log('Ability executed!!', result);
+								})
+								.catch((error) => {
+									console.error(
+										'Error executing ability',
+										error
+									);
+								})
+								.finally(() => {
+									console.log('Ability execution completed');
+								});
+						},
+					};
+				})}
+			/>
 		</BlockControls>
 	);
 }
@@ -53,18 +70,21 @@ const withPRCNexusToolbarControls = createHigherOrderComponent(
 			// Load the abilities list once.
 			useEffect(() => {
 				window.wp.abilities.getAbilities().then((abilities) => {
-					console.log(`Found ${abilities.length} abilities`, abilities);
 					setAbilitiesList(abilities);
 				});
 			}, []);
 
 			const matchedAbilitiesList = useMemo(() => {
-				return abilitiesList.filter(ability => ability.meta?.allowedBlocks?.includes(name));
+				return abilitiesList.filter((ability) =>
+					ability.meta?.allowed_blocks?.includes(name)
+				);
 			}, [abilitiesList, name]);
 
 			return (
 				<>
-					<AbilitiesToolbarDropdownMenu abilitiesList={matchedAbilitiesList} />
+					<AbilitiesToolbarDropdownMenu
+						abilitiesList={matchedAbilitiesList}
+					/>
 					<BlockEdit {...props} />
 				</>
 			);

@@ -108,8 +108,12 @@ class MCP_Server {
 		$this->abilities = $abilities;
 		$this->resources = $resources;
 		$this->prompts   = $prompts;
-		// Init the WordPress MCP Adapter.
-		$adapter = McpAdapter::instance();
+		// Check if the MCP Adapter is available.
+		if ( class_exists( \WP\MCP\Core\McpAdapter::class ) ) {
+			// Initialize the MCP adapter and activate the default server.
+			\WP\MCP\Core\McpAdapter::instance();
+		}
+		// Activate the /nexus mcp server.
 		$loader->add_action( 'mcp_adapter_init', $this, 'register_server', 10, 1 );
 	}
 
@@ -129,7 +133,7 @@ class MCP_Server {
 			$this->server_description,
 			$this->server_version,
 			array(
-				\WP\MCP\Transport\Http\RestTransport::class,
+				\WP\MCP\Transport\HttpTransport::class,
 			), // Transport methods.
 			\WP\MCP\Infrastructure\ErrorHandling\ErrorLogMcpErrorHandler::class, // Error handler.
 			\WP\MCP\Infrastructure\Observability\NullMcpObservabilityHandler::class, // Observability handler.

@@ -30,7 +30,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp trending-news-analysis run --category=nation --total=5 --output_format=markdown
+		 *     wp prc nexus trending-news run --category=nation --total=5 --output_format=markdown
 		 *
 		 * @when after_wp_load
 		 *

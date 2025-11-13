@@ -1,356 +1,493 @@
 # Observability
 
-This guide covers basic observability functionality in the MCP Adapter, focusing on transport layer monitoring. The
-observability system tracks request metrics, performance data, and error patterns to provide insights into MCP adapter
-usage and performance.
+The MCP Adapter tracks metrics and events throughout the request lifecycle using an interface-based observability system with a unified event recording architecture.
 
-## Table of Contents
+## System Overview
 
-1. [Overview](#overview)
-2. [Available Handlers](#available-handlers)
-3. [Metrics Tracked](#metrics-tracked)
-4. [Configuration](#configuration)
-5. [Creating Custom Handlers](#creating-custom-handlers)
-6. [Integration Examples](#integration-examples)
+The observability system has two main components:
 
-## Overview
+- **Event Tracking**: `McpObservabilityHandlerInterface` implementations track events and metrics
+- **Helper Utilities**: `McpObservabilityHelperTrait` provides tag management and error categorization
 
-The MCP Adapter includes a comprehensive observability system that tracks metrics and events throughout the MCP request lifecycle. This system follows the same interface pattern as the error handling system, providing a clean abstraction that can be implemented with custom observability handlers.
+```php
+use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
 
-### Key Features
+interface McpObservabilityHandlerInterface {
+    public function record_event(string $event, array $tags = [], ?float $duration_ms = null): void;
+}
+```
 
-- **Zero-overhead when disabled**: The `NullMcpObservabilityHandler` provides no-op implementations
-- **Built-in logging**: The `ErrorLogMcpObservabilityHandler` logs events to PHP error log
-- **Extensible design**: Implement the interface for integration with monitoring systems
-- **Comprehensive tracking**: Tracks requests, component lifecycle, errors, and performance
-- **Enhanced error tracking**: Detailed error categorization and failure analysis
-- **Event emission pattern**: Emits structured events for external aggregation systems
+### Architecture: Metadata-Driven Observability
 
-## Available Handlers
+The observability system follows a **middleware pattern** where handlers return enriched metadata that flows up to the transport layer for centralized event recording:
+
+1. **Handlers** (Business Logic Layer): Execute business logic and attach `_metadata` to responses
+2. **RequestRouter** (Transport Layer): Extracts `_metadata`, merges with request context, and records events
+3. **ObservabilityHandler**: Receives unified events with rich context from a single point
+
+**Benefits:**
+
+- **Single source of truth**: All observability flows through RequestRouter
+- **Consistent timing**: Duration tracked at transport layer for ALL requests
+- **DRY principle**: No duplicate event recording in handlers
+- **Clean separation**: Handlers focus on business logic, not observability
+
+### Event Emission Pattern
+
+- **MCP Adapter**: Handlers attach metadata to responses
+- **RequestRouter**: Extracts metadata and emits events with consistent structure
+- **Handlers**: Send events to external systems (logs, StatsD, Prometheus, etc.)
+- **External Systems**: Aggregate and analyze events
+
+## Built-in Handlers
 
 ### NullMcpObservabilityHandler
 
-The default observability handler that provides zero-overhead no-op implementations. Use this when observability
-tracking is not needed.
+No-op handler that ignores all events (zero overhead when observability is disabled):
 
 ```php
-use WP\MCP\Infrastructure\Observability\NullMcpObservabilityHandler;
-
-// This handler does nothing - zero overhead
-$observability_handler = NullMcpObservabilityHandler::class;
+$handler = new NullMcpObservabilityHandler();
+$handler->record_event('test.event', []); // Does nothing
+$handler->record_event('test.metric', [], 123.45); // Event with timing - does nothing
 ```
 
 ### ErrorLogMcpObservabilityHandler
 
-A simple handler that logs observability metrics to the PHP error log. Useful for development and basic production
-monitoring.
+Logs events and metrics to PHP error log with structured formatting:
 
 ```php
-use WP\MCP\Infrastructure\Observability\ErrorLogMcpObservabilityHandler;
-
-// This handler logs metrics to error_log()
-$observability_handler = ErrorLogMcpObservabilityHandler::class;
+$handler = new ErrorLogMcpObservabilityHandler();
+$handler->record_event('mcp.request', ['status' => 'success', 'method' => 'tools/call'], 45.23);
+// Logs: [MCP Observability] EVENT mcp.request 45.23ms [status=success,method=tools/call,site_id=1,user_id=123,timestamp=1234567890]
 ```
 
-This handler implements `McpObservabilityHandlerInterface` and uses the `McpObservabilityHelperTrait` for shared utility methods.
+## Events Tracked
 
-Example log output:
+All events use a **consistent naming pattern with status tags** for easier filtering and aggregation.
 
-```
-[MCP Observability] EVENT mcp.request.count [method=tools/call,transport=rest,site_id=1,user_id=123]
-[MCP Observability] EVENT mcp.tool.execution_success [tool_name=get-posts,server_id=blog-tools]
-[MCP Observability] EVENT mcp.tool.execution_failed [tool_name=bad-tool,error_type=RuntimeException,error_category=execution]
-[MCP Observability] EVENT mcp.component.registered [component_type=tool,component_name=my-plugin/get-posts]
-[MCP Observability] TIMING mcp.request.duration 45.23ms [method=tools/call,transport=rest,site_id=1,user_id=123]
-```
+### Request Events
 
-## Events and Metrics Tracked
+**Event:** `mcp.request`
 
-The observability system currently tracks the following metrics at the transport layer:
+**Tags:**
 
-### Request Metrics
+- `status`: `success` | `error`
+- `method`: MCP method (e.g., `tools/call`, `resources/list`)
+- `transport`: Transport type (e.g., `http`)
+- `server_id`: MCP server ID
+- `request_id`: JSON-RPC request ID
+- `session_id`: MCP session ID (null if no session)
+- `params`: Sanitized request parameters (safe fields only)
+- `error_code`: JSON-RPC error code (only for errors)
+- `error_type`: Exception class name (only for exceptions)
+- `error_category`: Error category (validation, execution, logic, system, type, arguments, unknown)
 
-- **mcp.request.count** - Total number of requests processed
-- **mcp.request.success** - Number of successful requests
-- **mcp.request.error** - Number of failed requests with error details
+**Additional tags from handler metadata:**
 
-### Performance Metrics
+- `component_type`: `tool` | `resource` | `prompt` | `tools` | `resources` | `prompts`
+- `tool_name`: Tool name (for tool requests)
+- `ability_name`: WordPress ability name (when applicable)
+- `prompt_name`: Prompt name (for prompt requests)
+- `resource_uri`: Resource URI (for resource requests)
+- `failure_reason`: Specific failure reason (see below) - uses WP_Error code when available
+- `new_session_id`: Newly created session ID (only on initialize requests)
 
-- **mcp.request.duration** - Request processing time in milliseconds
+**Includes duration timing**: Yes (in milliseconds)
 
-### Component Lifecycle Events (New)
-
-- **mcp.component.registered** - Successful component (tool/resource/prompt) registration
-- **mcp.component.registration_failed** - Failed component registration attempts
-- **mcp.server.created** - MCP server creation events
-
-### Tool Operation Events (New)
-
-- **mcp.tool.not_found** - Tool lookup failures
-- **mcp.tool.permission_denied** - Permission denied for tool access
-- **mcp.tool.permission_check_failed** - Errors during permission validation
-- **mcp.tool.execution_success** - Successful tool executions
-- **mcp.tool.execution_failed** - Tool execution failures
-
-### Enhanced Error Tracking (New)
-
-All error events include standardized categorization:
-
-- **error_type** - Specific exception class name (e.g., RuntimeException, InvalidArgumentException)
-- **error_category** - General category (validation, execution, logic, system, type, arguments, unknown)
-- **error_message_hash** - Hash for grouping similar errors
-
-### Metric Tags
-
-All metrics include the following tags for filtering and aggregation:
-
-- **method** - The MCP method being called (e.g., `tools/call`, `resources/list`)
-- **transport** - The transport type (e.g., `rest`, `streamable`)
-- **site_id** - WordPress site ID (for multisite environments)
-- **user_id** - WordPress user ID making the request
-- **timestamp** - Unix timestamp when the metric was recorded
-- **error_type** - Exception class name (for error events only)
-- **tool_name** - Name of the tool being accessed (for tool events)
-- **component_type** - Type of component (tool, resource, prompt)
-- **component_name** - Name of the component being registered
-- **server_id** - ID of the MCP server handling the request
-
-## Configuration
-
-### Transport-Level Configuration
-
-Currently, observability handlers are configured at the transport level. By default, all transports use the
-`NullMcpObservabilityHandler` (disabled).
+**Examples:**
 
 ```php
-// The observability handler is set as a property on AbstractMcpTransport
-protected string $observability_handler = NullMcpObservabilityHandler::class;
+// Successful tool execution
+[
+  'event' => 'mcp.request',
+  'tags' => [
+    'status' => 'success',
+    'method' => 'tools/call',
+    'transport' => 'http',
+    'server_id' => 'default',
+    'request_id' => 82,
+    'session_id' => 'a3f2c1d4-5e6f-7890-abcd-ef1234567890',
+    'params' => ['name' => 'create-post', 'arguments_count' => 2],
+    'component_type' => 'tool',
+    'tool_name' => 'create-post',
+    'ability_name' => 'create_post',
+  ],
+  'duration_ms' => 45.23
+]
+
+// Failed request - tool not found
+[
+  'event' => 'mcp.request',
+  'tags' => [
+    'status' => 'error',
+    'method' => 'tools/call',
+    'transport' => 'http',
+    'server_id' => 'default',
+    'request_id' => 83,
+    'session_id' => 'a3f2c1d4-5e6f-7890-abcd-ef1234567890',
+    'params' => ['name' => 'invalid-tool'],
+    'component_type' => 'tool',
+    'tool_name' => 'invalid-tool',
+    'failure_reason' => 'not_found',
+    'error_code' => -32002,
+  ],
+  'duration_ms' => 2.15
+]
+
+// Initialize request (creates new session)
+[
+  'event' => 'mcp.request',
+  'tags' => [
+    'status' => 'success',
+    'method' => 'initialize',
+    'transport' => 'http',
+    'server_id' => 'default',
+    'request_id' => 1,
+    'session_id' => null, // No session yet
+    'params' => ['protocolVersion' => '2025-06-18', 'client_name' => 'Bruno'],
+    'new_session_id' => 'a3f2c1d4-5e6f-7890-abcd-ef1234567890', // Newly created
+  ],
+  'duration_ms' => 12.34
+]
+
+// Permission denied with detailed WP_Error
+[
+  'event' => 'mcp.request',
+  'tags' => [
+    'status' => 'error',
+    'method' => 'tools/call',
+    'transport' => 'http',
+    'server_id' => 'default',
+    'request_id' => 84,
+    'session_id' => 'a3f2c1d4-5e6f-7890-abcd-ef1234567890',
+    'params' => ['name' => 'user-notifications', 'arguments_count' => 1],
+    'component_type' => 'tool',
+    'tool_name' => 'user-notifications',
+    'ability_name' => 'wpcom-mcp/user-notifications',
+    'failure_reason' => 'ability_invalid_input', // WP_Error code used directly
+    'error_code' => -32004,
+  ],
+  'duration_ms' => 8.51
+]
 ```
 
-### Future Configuration Options
+**Note:** When WordPress abilities return `WP_Error` objects from `has_permission()`, the error code is automatically used as the `failure_reason`, providing specific context like `ability_invalid_input`, `ability_permission_error`, etc. This makes it much easier to track specific permission failure types. If a boolean `false` is returned, the generic `permission_denied` reason is used.
 
-Future versions will include WordPress options for easier configuration:
+### Failure Reasons
+
+The `failure_reason` tag provides specific context for errors. When WordPress abilities return `WP_Error` objects, the error code is used directly as the failure reason.
+
+**Standard Failure Reasons:**
+
+**Tool-related:**
+
+- `not_found`: Tool doesn't exist
+- `permission_denied`: Permission check returned false (generic)
+- `permission_check_failed`: Permission callback threw exception
+- `wp_error`: WordPress ability returned WP_Error during execution
+- `execution_failed`: Tool execution threw exception
+- `missing_parameter`: Required parameter missing
+- **Any WP_Error code**: e.g., `ability_invalid_input`, `ability_permission_error`, `ability_rate_limit`, etc.
+
+**Prompt-related:**
+
+- `not_found`: Prompt doesn't exist
+- `permission_denied`: Permission denied (generic)
+- `execution_failed`: Prompt execution threw exception
+- `missing_parameter`: Required parameter missing
+- **Any WP_Error code**: Specific error codes from ability permission checks
+
+**Resource-related:**
+
+- `not_found`: Resource doesn't exist
+- `permission_denied`: Permission denied (generic)
+- `execution_failed`: Resource reading threw exception
+- `missing_parameter`: Required parameter missing
+- **Any WP_Error code**: Specific error codes from ability permission checks
+
+**Example WP_Error Codes as Failure Reasons:**
+
+- `ability_invalid_input`: Invalid input validation failed
+- `ability_permission_error`: Specific permission issue
+- `ability_rate_limit`: Rate limit exceeded
+- `ability_quota_exceeded`: Quota exceeded
+- Any custom error code returned by your abilities
+
+### Component Registration Events
+
+**Event:** `mcp.component.registration`
+
+**Tags:**
+
+- `status`: `success` | `failed`
+- `component_type`: `tool` | `resource` | `prompt` | `ability_tool`
+- `component_name`: Name of the component
+- `server_id`: MCP server ID
+- `error_type`: Exception class name (only for failures)
+
+**Includes duration timing**: No
+
+**Default Behavior**: Component registration events are **disabled by default** to avoid polluting observability logs during server startup. Use the filter below to enable them when needed.
+
+**Examples:**
 
 ```php
-// Planned configuration options
-add_option('mcp_observability_enabled', false);
-add_option('mcp_observability_handler', 'NullMcpObservabilityHandler');
+// Successful tool registration
+[
+  'event' => 'mcp.component.registration',
+  'tags' => [
+    'status' => 'success',
+    'component_type' => 'tool',
+    'component_name' => 'create_post',
+    'server_id' => 'default',
+  ]
+]
+
+// Failed resource registration
+[
+  'event' => 'mcp.component.registration',
+  'tags' => [
+    'status' => 'failed',
+    'component_type' => 'resource',
+    'component_name' => 'invalid_ability',
+    'error_type' => 'InvalidArgumentException',
+    'server_id' => 'default',
+  ]
+]
+```
+
+#### Controlling Component Registration Events
+
+Component registration events are disabled by default but can be enabled using the `mcp_adapter_observability_record_component_registration` filter:
+
+```php
+// Enable component registration events globally
+add_filter('mcp_adapter_observability_record_component_registration', '__return_true');
+
+// Enable only when debugging
+add_filter('mcp_adapter_observability_record_component_registration', function($should_record) {
+    return defined('WP_DEBUG') && WP_DEBUG;
+});
+
+// Enable only in development environments
+add_filter('mcp_adapter_observability_record_component_registration', function($should_record) {
+    return wp_get_environment_type() === 'development';
+});
+```
+
+This filter is particularly useful for:
+
+- Debugging component loading issues during development
+- Troubleshooting registration failures in staging environments
+- Keeping production logs clean by disabling startup noise
+
+### Server Events
+
+**Event:** `mcp.server.created`
+
+**Tags:**
+
+- `status`: `success`
+- `server_id`: Server ID
+- `transport_count`: Number of transports
+- `tools_count`: Number of tools
+- `resources_count`: Number of resources
+- `prompts_count`: Number of prompts
+
+**Includes duration timing**: No
+
+### Common Tags
+
+All events automatically include these tags:
+
+- `site_id`: WordPress site ID
+- `user_id`: WordPress user ID
+- `timestamp`: Unix timestamp
+
+## Helper Trait
+
+`McpObservabilityHelperTrait` provides utility methods for handlers:
+
+### Tag Management
+
+- `get_default_tags()`: Default tags (site_id, user_id, timestamp)
+- `sanitize_tags()`: Remove sensitive data and limit tag length
+- `merge_tags()`: Combine user tags with defaults
+- `format_metric_name()`: Ensure consistent metric naming with 'mcp.' prefix
+
+### Error Handling
+
+- `categorize_error()`: Classify exceptions into standard categories
+
+```php
+use WP\MCP\Infrastructure\Observability\McpObservabilityHelperTrait;
+
+class MyHandler implements McpObservabilityHandlerInterface {
+    use McpObservabilityHelperTrait;
+
+    public function record_event(string $event, array $tags = [], ?float $duration_ms = null): void {
+        $formatted_event = self::format_metric_name($event);
+        $merged_tags = self::merge_tags($tags);
+        // ... send to your system with optional timing: $duration_ms
+    }
+}
 ```
 
 ## Creating Custom Handlers
 
-To create custom observability handlers, implement the `McpObservabilityHandlerInterface` interface:
+Implement `McpObservabilityHandlerInterface` to create custom handlers:
+
+### File-based Handler
 
 ```php
-<?php
 use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
 use WP\MCP\Infrastructure\Observability\McpObservabilityHelperTrait;
 
-class CustomMcpObservabilityHandler implements McpObservabilityHandlerInterface {
-
+class FileObservabilityHandler implements McpObservabilityHandlerInterface {
     use McpObservabilityHelperTrait;
 
-    public static function record_event(string $event, array $tags = []): void {
-        // Log to custom file
-        $log_entry = sprintf(
-            '[MCP Event] %s | Tags: %s',
-            $event,
-            wp_json_encode($tags)
+    public function record_event(string $event, array $tags = [], ?float $duration_ms = null): void {
+        $formatted_event = self::format_metric_name($event);
+        $merged_tags = self::merge_tags($tags);
+
+        // Include timing if provided
+        $timing_info = $duration_ms !== null ? sprintf(' %.2fms', $duration_ms) : '';
+        $log_entry = sprintf('[MCP Event] %s%s | Tags: %s',
+            $formatted_event,
+            $timing_info,
+            wp_json_encode($merged_tags)
         );
 
-        file_put_contents(
-            WP_CONTENT_DIR . '/mcp-metrics.log',
-            $log_entry . "\n",
-            FILE_APPEND | LOCK_EX
-        );
-    }
-
-    public static function record_timing(string $metric, float $duration_ms, array $tags = []): void {
-        // Log timing data
-        $log_entry = sprintf(
-            '[MCP Timing] %s: %.2fms | Tags: %s',
-            $metric,
-            $duration_ms,
-            wp_json_encode($tags)
-        );
-
-        file_put_contents(
-            WP_CONTENT_DIR . '/mcp-metrics.log',
-            $log_entry . "\n",
-            FILE_APPEND | LOCK_EX
-        );
+        file_put_contents(WP_CONTENT_DIR . '/mcp-metrics.log',
+            $log_entry . "\n", FILE_APPEND | LOCK_EX);
     }
 }
 ```
 
-### Helper Methods Available
-
-The `McpObservabilityHelperTrait` provides several helpful methods:
-
-- `format_metric_name()` - Ensures consistent metric naming with 'mcp.' prefix
-- `sanitize_tags()` - Removes sensitive data from tags and limits length
-- `get_default_tags()` - Provides default tags (site_id, user_id, timestamp)
-- `merge_tags()` - Combines user tags with default tags and sanitizes them
-- `record_error_event()` - Standardized error event emission with categorization
-- `categorize_error()` - Classifies exceptions into standard categories
-
-### Interface Methods
-
-The `McpObservabilityHandlerInterface` defines these required methods:
-
-- `record_event(string $event, array $tags = [])` - Emit a countable event
-- `record_timing(string $metric, float $duration_ms, array $tags = [])` - Record timing measurement
-
-## Event Emission Pattern
-
-The MCP Adapter uses an **event emission pattern** rather than local aggregation:
-
-### How It Works
-
-1. **MCP Adapter Role**: Emits structured events to handlers
-2. **Handler Role**: Sends events to external systems (logs, StatsD, Prometheus, etc.)
-3. **External System Role**: Aggregates, counts, and analyzes events
-
-### Benefits
-
-- ✅ **Zero Memory Overhead**: No local counters or persistent state
-- ✅ **Flexible Backends**: Works with any observability system
-- ✅ **WordPress-Friendly**: No database writes or resource concerns
-- ✅ **Industry Standard**: Follows StatsD/OpenTelemetry patterns
-- ✅ **Scalable**: Handles high-volume event emission efficiently
-
-### Important Notes
-
-- `record_event()` emits an event, it doesn't store a local counter
-- `record_timing()` emits a timing measurement, it doesn't store data locally
-- Aggregation and analysis happen in your external observability system
-- The adapter focuses on **what happened**, your system determines **how many times**
-
-## Integration Examples
-
-### External Service Integration
-
-Send metrics to an external monitoring service:
+### External Service Handler
 
 ```php
-use WP\MCP\Infrastructure\Observability\Contracts\McpObservabilityHandlerInterface;
-use WP\MCP\Infrastructure\Observability\McpObservabilityHelperTrait;
-
 class ExternalServiceObservabilityHandler implements McpObservabilityHandlerInterface {
-
     use McpObservabilityHelperTrait;
 
-    public static function record_event(string $event, array $tags = []): void {
-        $data = [
+    public function record_event(string $event, array $tags = [], ?float $duration_ms = null): void {
+        $payload = [
             'type' => 'event',
-            'name' => $event,
-            'tags' => $tags,
-            'timestamp' => time(),
+            'name' => self::format_metric_name($event),
+            'tags' => self::merge_tags($tags),
             'site' => get_site_url()
         ];
+
+        // Include duration if provided
+        if ($duration_ms !== null) {
+            $payload['duration_ms'] = $duration_ms;
+        }
 
         wp_remote_post('https://metrics.example.com/api/events', [
-            'body' => wp_json_encode($data),
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . get_option('metrics_api_key')
-            ],
-            'timeout' => 5
-        ]);
-    }
-
-    public static function record_timing(string $metric, float $duration_ms, array $tags = []): void {
-        $data = [
-            'type' => 'timing',
-            'name' => $metric,
-            'duration' => $duration_ms,
-            'tags' => $tags,
-            'timestamp' => time(),
-            'site' => get_site_url()
-        ];
-
-        wp_remote_post('https://metrics.example.com/api/timings', [
-            'body' => wp_json_encode($data),
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . get_option('metrics_api_key')
-            ],
+            'body' => wp_json_encode($payload),
+            'headers' => ['Content-Type' => 'application/json'],
             'timeout' => 5
         ]);
     }
 }
 ```
 
-### Database Storage
+## Using Custom Handlers
 
-Store metrics in WordPress database:
+Once you've created custom observability handlers, you can configure them for use in your MCP Adapter setup.
 
-```php
-class DatabaseObservabilityHandler implements McpObservabilityHandlerInterface {
+### Replacing the Default Server's Observability Handler
 
-    public static function record_event(string $event, array $tags = []): void {
-        global $wpdb;
-
-        $wpdb->insert(
-            $wpdb->prefix . 'mcp_events',
-            [
-                'event_name' => $event,
-                'tags' => wp_json_encode($tags),
-                'timestamp' => current_time('mysql')
-            ]
-        );
-    }
-
-    public static function record_timing(string $metric, float $duration_ms, array $tags = []): void {
-        global $wpdb;
-
-        $wpdb->insert(
-            $wpdb->prefix . 'mcp_timings',
-            [
-                'metric_name' => $metric,
-                'duration_ms' => $duration_ms,
-                'tags' => wp_json_encode($tags),
-                'timestamp' => current_time('mysql')
-            ]
-        );
-    }
-}
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Metrics not appearing**
-
-- Check that your observability handler is properly configured
-- Verify error logging is enabled in PHP
-- Ensure MCP requests are actually being processed
-
-**Performance concerns**
-
-- Use `NullMcpObservabilityHandler` to disable observability
-- Keep custom handlers lightweight
-- Use async processing for external API calls
-
-### Testing Your Handler
-
-Simple test to verify your observability handler works:
+The default MCP server created by the adapter can have its observability handler replaced using the `mcp_adapter_default_server_config` filter:
 
 ```php
-// Test your custom handler
-$handler = new CustomMcpObservabilityHandler();
-$handler::record_event('test.event', ['test' => 'value']);
-$handler::record_timing('test.timing', 123.45, ['test' => 'value']);
+// Replace the default server's observability handler
+add_filter('mcp_adapter_default_server_config', function($config) {
+    $config['observability_handler'] = FileObservabilityHandler::class;
+    return $config;
+});
 
-// Check your log file or external service for the data
+// Or disable observability entirely
+add_filter('mcp_adapter_default_server_config', function($config) {
+    $config['observability_handler'] = NullMcpObservabilityHandler::class;
+    return $config;
+});
 ```
 
-### Debug Output
+### Configuring Observability for Custom Servers
 
-Enable the built-in error log handler to see what metrics are being tracked:
+When creating custom servers, you can specify the observability handler directly:
 
-```bash
-# Watch the error log for MCP observability entries
-tail -f /path/to/error.log | grep "MCP Observability"
+```php
+// In your plugin's initialization
+add_action('mcp_adapter_init', function($adapter) {
+    $adapter->create_server(
+        'my-custom-server',
+        'my-namespace',
+        'my-route',
+        'My Custom Server',
+        'A custom MCP server with file-based observability',
+        '1.0.0',
+        [MyCustomTransport::class],
+        null, // Use default error handler
+        FileObservabilityHandler::class, // Custom observability handler
+        ['my-tool'], // tools
+        [], // resources
+        [], // prompts
+        null // transport permission callback
+    );
+});
 ```
+
+## Querying Events
+
+With the unified event structure, you can easily query and analyze metrics:
+
+### Success Rate by Method
+
+```sql
+SELECT
+  tags->>'method' as method,
+  SUM(CASE WHEN tags->>'status' = 'success' THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as success_rate
+FROM mcp_events
+WHERE event = 'mcp.request'
+GROUP BY tags->>'method'
+```
+
+### Tool Performance
+
+```sql
+SELECT
+  tags->>'tool_name' as tool_name,
+  AVG(duration_ms) as avg_duration,
+  COUNT(*) as call_count
+FROM mcp_events
+WHERE event = 'mcp.request'
+  AND tags->>'component_type' = 'tool'
+  AND tags->>'status' = 'success'
+GROUP BY tags->>'tool_name'
+ORDER BY call_count DESC
+```
+
+### Failure Analysis
+
+```sql
+SELECT
+  tags->>'failure_reason' as reason,
+  tags->>'error_category' as category,
+  COUNT(*) as count
+FROM mcp_events
+WHERE event = 'mcp.request'
+  AND tags->>'status' = 'error'
+GROUP BY tags->>'failure_reason', tags->>'error_category'
+ORDER BY count DESC
+```
+
+## Best Practices
+
+1. **Use Status for Filtering**: Query by `status` tag to separate successes from failures
+2. **Group by Event Name**: All requests use `mcp.request`, making aggregation simple
+3. **Leverage Failure Reasons**: Use `failure_reason` for detailed error analysis
+4. **Monitor Duration**: Track performance trends using the duration field
+5. **Alert on Patterns**: Set up alerts for specific failure_reason values
+6. **Context-Rich Logging**: Handler metadata provides component-specific context automatically

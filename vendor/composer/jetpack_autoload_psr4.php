@@ -11,8 +11,8 @@ return array(
 		'path'    => array( $vendorDir . '/wordpress/php-ai-client/src' )
 	),
 	'WP\\MCP\\' => array(
-		'version' => '0.1.0.0',
-		'path'    => array( $vendorDir . '/wordpress/mcp-adapter/src' )
+		'version' => '0.3.0.0',
+		'path'    => array( $vendorDir . '/wordpress/mcp-adapter/includes' )
 	),
 	'Psr\\Http\\Message\\' => array(
 		'version' => '2.0.0.0',
@@ -59,7 +59,7 @@ return array(
 		'path'    => array( $vendorDir . '/gnews-io/gnews-io-php/src' )
 	),
 	'Automattic\\Jetpack\\Autoloader\\' => array(
-		'version' => '5.0.11',
+		'version' => '5.0.12',
 		'path'    => array( $vendorDir . '/automattic/jetpack-autoloader/src' )
 	),
 );

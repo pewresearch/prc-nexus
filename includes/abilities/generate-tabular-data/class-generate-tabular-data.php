@@ -56,11 +56,11 @@ class Generate_Tabular_Data {
 							'type'        => 'string',
 							'description' => 'Description of data to retrieve and format as a table.',
 						),
-						'year_range_start' => array(
+						'from'             => array(
 							'type'        => 'number',
 							'description' => 'Start year of the data range (e.g., 2010).',
 						),
-						'year_range_end'   => array(
+						'to'               => array(
 							'type'        => 'number',
 							'description' => 'End year of the data range (e.g., 2020).',
 						),
@@ -82,74 +82,42 @@ class Generate_Tabular_Data {
 					),
 				),
 				'execute_callback'    => array( $this, 'generate_tabular_data' ),
-				'permission_callback' => function ( $input ) {
+				'permission_callback' => function () {
 					return current_user_can( 'manage_options' );
 				},
 				'meta'                => array(
-					'annotations'   => array(
+					'annotations'    => array(
 						'readonly'    => true,
 						'destructive' => false,
 						'idempotent'  => false,
 					),
-					'show_in_rest'  => true,
-					'allowedBlocks' => self::$allowed_blocks,
+					'show_in_rest'   => true,
+					'allowed_blocks' => self::$allowed_blocks,
+					'mcp'            => array(
+						'public' => true,
+						'type'   => 'tool',
+					),
 				),
 			)
 		);
 	}
 
 	/**
-	 * Get system instructions for tabular data generation.
-	 *
-	 * @return string System instructions.
-	 */
-	private function get_system_instructions() {
-		return <<<INSTRUCTIONS
-You are a data analyst assistant for Pew Research Center. Your task is to generate tabular data in markdown format based on information from provided source URLs.
-
-## Core Responsibilities
-- Extract relevant data from the provided source URLs
-- Format data as clean markdown tables
-- Include source attribution with URLs as table caption
-- Only use information that can be verified from the sources
-
-## Output Format Requirements
-- Use standard markdown table syntax with pipes (|) and hyphens (-)
-- Include clear column headers
-- Ensure data is properly aligned
-- Add a caption below the table listing source URLs
-- Keep tables concise and readable
-
-## Critical Rules
-🔴 NEVER fabricate or estimate data
-🔴 NEVER use data from sources not provided in the URLs list
-🔴 If you cannot find the requested data in the sources, respond with: "No data can be generated for this request. The information was not found in the provided sources."
-🟢 ONLY use data that appears in the provided source URLs
-🟢 ALWAYS cite which specific URLs you used for each data point
-
-## Example Output Format
-| Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
-| Data     | Data     | Data     |
-
-*Source: [URL1], [URL2]*
-INSTRUCTIONS;
-	}
-
-	/**
 	 * Generate tabular data from prompt.
 	 *
 	 * @param array $input The input.
-	 * @return array The site info.
+	 *
+	 * @return array Tabular data in markdown format.
 	 */
 	public function generate_tabular_data( $input ) {
 		error_log( '------------------------------------------' ); // phpcs:ignore
 		error_log( 'generate_tabular_data input: ' . print_r( $input, true ) ); // phpcs:ignore
 		$data_description = $input['data_description'] ?? '';
-		$year_range_start = $input['year_range_start'] ?? null;
-		$year_range_end   = $input['year_range_end'] ?? null;
+		$year_range_start = $input['from'] ?? null;
+		$year_range_end   = $input['to'] ?? null;
 
 		$search_term = \PRC\Platform\Nexus\Utils\refine_search_term( $data_description );
+
 		error_log( '--------------------------------------------' );//phpcs:ignore
 		error_log( 'AI_SEARCH_TERM: ' . print_r( $search_term, true ) );//phpcs:ignore
 		error_log( '--------------------------------------------' );// phpcs:ignore
@@ -234,19 +202,25 @@ INSTRUCTIONS;
 				$table = $prompt;
 
 				return array(
-					'source_urls' => $urls_to_check,
-					'table'       => $table,
+					'error' => '',
+					'table' => $table,
 				);
 			} else {
 				error_log( '--------------------------------------------' );//phpcs:ignore
 				error_log( 'NO DATA FOUND' );//phpcs:ignore
 				error_log( '--------------------------------------------' );// phpcs:ignore
-				return array( 'error' => 'No data can be generated for request. No relevant posts found on Pew Research Center website.' );
+				return array(
+					'error' => 'No data can be generated for request. No relevant posts found on Pew Research Center website.',
+					'table' => '',
+				);
 			}
 		}
 		error_log( '--------------------------------------------' );//phpcs:ignore
 		error_log( 'NO SEARCH TERM FOUND' );//phpcs:ignore
 		error_log( '--------------------------------------------' );// phpcs:ignore
-		return array( 'error' => 'No data can be generated for request. Unable to determine search term.' );
+		return array(
+			'error' => 'No data can be generated for request. Unable to determine search term.',
+			'table' => '',
+		);
 	}
 }

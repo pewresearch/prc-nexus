@@ -53,7 +53,7 @@ class ComposerStaticInit75f763e692d8e5495d529ea93c3624a9
         ),
         'WP\\MCP\\' => 
         array (
-            0 => __DIR__ . '/..' . '/wordpress/mcp-adapter/src',
+            0 => __DIR__ . '/..' . '/wordpress/mcp-adapter/includes',
         ),
         'Psr\\Http\\Message\\' => 
         array (
