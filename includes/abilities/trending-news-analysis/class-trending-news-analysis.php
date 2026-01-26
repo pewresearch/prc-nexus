@@ -340,6 +340,7 @@ class Trending_News_Analysis {
 	 */
 	private function get_related_posts( $category_ids, $limit = 5 ) {
 		if ( empty( $category_ids ) ) {
+			error_log( 'No category IDs provided, returning empty array' ); // phpcs:ignore
 			return array();
 		}
 
@@ -374,11 +375,13 @@ class Trending_News_Analysis {
 			'tax_query'      => $tax_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 			'date_query'     => array(
 				array(
-					'after'     => gmdate( 'Y' ) . '-01-01',
+					'after'     => gmdate( 'Y-m-d', strtotime( '-6 months' ) ),
 					'inclusive' => true,
 				),
 			),
 		);
+
+		error_log( 'query_args: ' . print_r( $query_args, true ) ); // phpcs:ignore
 
 		$query = new \WP_Query( $query_args );
 		$posts = array();
@@ -394,6 +397,9 @@ class Trending_News_Analysis {
 				);
 			}
 			wp_reset_postdata();
+		} else {
+			error_log( 'No posts found, returning empty array' ); // phpcs:ignore
+			return array();
 		}
 
 		// Cache for 1 hour (posts are relatively stable but may get published).

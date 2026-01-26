@@ -23,7 +23,7 @@ return array(
 		'path'    => $vendorDir . '/wordpress/abilities-api/includes/bootstrap.php'
 	),
 	'b952b7bb71a5e8271abe3f2cc08a14a8' => array(
-		'version' => '0.2.0.0',
+		'version' => '0.2.1.0',
 		'path'    => $vendorDir . '/wordpress/php-ai-client/src/polyfills.php'
 	),
 );

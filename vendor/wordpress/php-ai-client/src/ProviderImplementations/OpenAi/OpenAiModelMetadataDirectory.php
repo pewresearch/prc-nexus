@@ -109,6 +109,14 @@ class OpenAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadata
                 ]
             ),
         ]);
+        $gptSearchOptions = [
+            new SupportedOption(OptionEnum::systemInstruction()),
+            new SupportedOption(OptionEnum::outputMimeType(), ['text/plain', 'application/json']),
+            new SupportedOption(OptionEnum::outputSchema()),
+            new SupportedOption(OptionEnum::customOptions()),
+            new SupportedOption(OptionEnum::inputModalities(), [[ModalityEnum::text()]]),
+            new SupportedOption(OptionEnum::outputModalities(), [[ModalityEnum::text()]]),
+        ];
         $imageCapabilities = [
             CapabilityEnum::imageGeneration(),
         ];
@@ -159,13 +167,14 @@ class OpenAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadata
 
         $modelsData = (array) $responseData['data'];
 
-        return array_values(
+        $models = array_values(
             array_map(
                 static function (array $modelData) use (
                     $gptCapabilities,
                     $gptOptions,
                     $gptMultimodalInputOptions,
                     $gptMultimodalSpeechOutputOptions,
+                    $gptSearchOptions,
                     $imageCapabilities,
                     $dalleImageOptions,
                     $gptImageOptions,
@@ -200,6 +209,8 @@ class OpenAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadata
                             // New multimodal output model for audio generation.
                             if (str_contains($modelId, '-audio')) {
                                 $modelOptions = $gptMultimodalSpeechOutputOptions;
+                            } elseif (str_contains($modelId, '-search')) {
+                                $modelOptions = $gptSearchOptions;
                             }
                         } elseif (!str_contains($modelId, '-audio')) {
                             $modelCaps = $gptCapabilities;
@@ -223,5 +234,86 @@ class OpenAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadata
                 $modelsData
             )
         );
+
+        usort($models, [$this, 'modelSortCallback']);
+
+        return $models;
+    }
+
+    /**
+     * Callback function for sorting models by ID, to be used with `usort()`.
+     *
+     * This method expresses preferences for certain models or model families within the provider by putting them
+     * earlier in the sorted list. The objective is not to be opinionated about which models are better, but to ensure
+     * that more commonly used, more recent, or flagship models are presented first to users.
+     *
+     * @since 0.2.1
+     *
+     * @param ModelMetadata $a First model.
+     * @param ModelMetadata $b Second model.
+     * @return int Comparison result.
+     */
+    protected function modelSortCallback(ModelMetadata $a, ModelMetadata $b): int
+    {
+        $aId = $a->getId();
+        $bId = $b->getId();
+
+        // Prefer non-preview models over preview models.
+        if (str_contains($aId, '-preview') && !str_contains($bId, '-preview')) {
+            return 1;
+        }
+        if (str_contains($bId, '-preview') && !str_contains($aId, '-preview')) {
+            return -1;
+        }
+
+        // Prefer GPT models over non-GPT models.
+        if (str_starts_with($aId, 'gpt-') && !str_starts_with($bId, 'gpt-')) {
+            return -1;
+        }
+        if (str_starts_with($bId, 'gpt-') && !str_starts_with($aId, 'gpt-')) {
+            return 1;
+        }
+
+        // Prefer GPT models with version numbers (e.g. 'gpt-5.1', 'gpt-5') over those without.
+        $aMatch = preg_match('/^gpt-([0-9.]+)(-[a-z0-9-]+)?$/', $aId, $aMatches);
+        $bMatch = preg_match('/^gpt-([0-9.]+)(-[a-z0-9-]+)?$/', $bId, $bMatches);
+        if ($aMatch && !$bMatch) {
+            return -1;
+        }
+        if ($bMatch && !$aMatch) {
+            return 1;
+        }
+        if ($aMatch && $bMatch) {
+            // Prefer later model versions.
+            $aVersion = $aMatches[1];
+            $bVersion = $bMatches[1];
+            if (version_compare($aVersion, $bVersion, '>')) {
+                return -1;
+            }
+            if (version_compare($bVersion, $aVersion, '>')) {
+                return 1;
+            }
+
+            // Prefer models without a suffix (i.e. base models) over those with a suffix.
+            if (!isset($aMatches[2]) && isset($bMatches[2])) {
+                return -1;
+            }
+            if (!isset($bMatches[2]) && isset($aMatches[2])) {
+                return 1;
+            }
+
+            // Prefer '-mini' models over others with a suffix.
+            if (isset($aMatches[2]) && isset($bMatches[2])) {
+                if ($aMatches[2] === '-mini' && $bMatches[2] !== '-mini') {
+                    return -1;
+                }
+                if ($bMatches[2] === '-mini' && $aMatches[2] !== '-mini') {
+                    return 1;
+                }
+            }
+        }
+
+        // Fallback: Sort alphabetically.
+        return strcmp($a->getId(), $b->getId());
     }
 }

@@ -7,7 +7,7 @@ $baseDir   = dirname($vendorDir);
 
 return array(
 	'WordPress\\AiClient\\' => array(
-		'version' => '0.2.0.0',
+		'version' => '0.2.1.0',
 		'path'    => array( $vendorDir . '/wordpress/php-ai-client/src' )
 	),
 	'WP\\MCP\\' => array(
@@ -59,7 +59,7 @@ return array(
 		'path'    => array( $vendorDir . '/gnews-io/gnews-io-php/src' )
 	),
 	'Automattic\\Jetpack\\Autoloader\\' => array(
-		'version' => '5.0.12',
+		'version' => '5.0.13',
 		'path'    => array( $vendorDir . '/automattic/jetpack-autoloader/src' )
 	),
 );

@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "automattic/jetpack-autoloader",
-            "version": "v5.0.12",
+            "version": "v5.0.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Automattic/jetpack-autoloader.git",
-                "reference": "e0b0c606afc67fecc0f5af647a5119ac11ed8238"
+                "reference": "94888d86820a99a0f3aba3498ba10f6b6245c929"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Automattic/jetpack-autoloader/zipball/e0b0c606afc67fecc0f5af647a5119ac11ed8238",
-                "reference": "e0b0c606afc67fecc0f5af647a5119ac11ed8238",
+                "url": "https://api.github.com/repos/Automattic/jetpack-autoloader/zipball/94888d86820a99a0f3aba3498ba10f6b6245c929",
+                "reference": "94888d86820a99a0f3aba3498ba10f6b6245c929",
                 "shasum": ""
             },
             "require": {
@@ -25,7 +25,7 @@
                 "php": ">=7.2"
             },
             "require-dev": {
-                "automattic/jetpack-changelogger": "^6.0.8",
+                "automattic/jetpack-changelogger": "^6.0.9",
                 "automattic/phpunit-select-config": "^1.0.3",
                 "composer/composer": "^2.2",
                 "yoast/phpunit-polyfills": "^4.0.0"
@@ -67,9 +67,9 @@
                 "wordpress"
             ],
             "support": {
-                "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.12"
+                "source": "https://github.com/Automattic/jetpack-autoloader/tree/v5.0.13"
             },
-            "time": "2025-11-10T21:33:06+00:00"
+            "time": "2025-11-12T16:41:11+00:00"
         },
         {
             "name": "gnews-io/gnews-io-php",
@@ -1105,16 +1105,16 @@
         },
         {
             "name": "wordpress/php-ai-client",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/WordPress/php-ai-client.git",
-                "reference": "81a104a9bc5f887e3fbecea6e0d9cd8eab3be0b2"
+                "reference": "61ecd7c86329d0cc3d17567891f363d8f3fc3be6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WordPress/php-ai-client/zipball/81a104a9bc5f887e3fbecea6e0d9cd8eab3be0b2",
-                "reference": "81a104a9bc5f887e3fbecea6e0d9cd8eab3be0b2",
+                "url": "https://api.github.com/repos/WordPress/php-ai-client/zipball/61ecd7c86329d0cc3d17567891f363d8f3fc3be6",
+                "reference": "61ecd7c86329d0cc3d17567891f363d8f3fc3be6",
                 "shasum": ""
             },
             "require": {
@@ -1168,7 +1168,7 @@
                 "issues": "https://github.com/WordPress/php-ai-client/issues",
                 "source": "https://github.com/WordPress/php-ai-client"
             },
-            "time": "2025-10-21T00:05:14+00:00"
+            "time": "2025-11-17T18:04:50+00:00"
         }
     ],
     "packages-dev": [],
@@ -1179,5 +1179,5 @@
     "prefer-lowest": false,
     "platform": {},
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

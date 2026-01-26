@@ -30,12 +30,6 @@ class Abilities_Manager {
 		$this->init_available_abilities( $loader );
 
 		$loader->add_action( 'wp_abilities_api_categories_init', $this, 'register_categories' );
-		add_action(
-			'init',
-			function () {
-				do_action( 'qm/debug', 'Initializing PRC Abilities: ' . print_r( $this->available_abilities, true ) );
-			}
-		);
 	}
 
 	/**

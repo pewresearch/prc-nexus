@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'pewresearch/prc-nexus',
-        'pretty_version' => 'dev-main',
-        'version' => 'dev-main',
-        'reference' => '554cd697f1aae1138013b7cc7ef92c80927962f9',
+        'pretty_version' => 'dev-trunk',
+        'version' => 'dev-trunk',
+        'reference' => '759370fe0d9bb82d31787d9755c3dcccdc917d0c',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'automattic/jetpack-autoloader' => array(
-            'pretty_version' => 'v5.0.12',
-            'version' => '5.0.12.0',
-            'reference' => 'e0b0c606afc67fecc0f5af647a5119ac11ed8238',
+            'pretty_version' => 'v5.0.13',
+            'version' => '5.0.13.0',
+            'reference' => '94888d86820a99a0f3aba3498ba10f6b6245c929',
             'type' => 'composer-plugin',
             'install_path' => __DIR__ . '/../automattic/jetpack-autoloader',
             'aliases' => array(),
@@ -56,9 +56,9 @@
             'dev_requirement' => false,
         ),
         'pewresearch/prc-nexus' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => '554cd697f1aae1138013b7cc7ef92c80927962f9',
+            'pretty_version' => 'dev-trunk',
+            'version' => 'dev-trunk',
+            'reference' => '759370fe0d9bb82d31787d9755c3dcccdc917d0c',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -197,9 +197,9 @@
             'dev_requirement' => false,
         ),
         'wordpress/php-ai-client' => array(
-            'pretty_version' => '0.2.0',
-            'version' => '0.2.0.0',
-            'reference' => '81a104a9bc5f887e3fbecea6e0d9cd8eab3be0b2',
+            'pretty_version' => '0.2.1',
+            'version' => '0.2.1.0',
+            'reference' => '61ecd7c86329d0cc3d17567891f363d8f3fc3be6',
             'type' => 'library',
             'install_path' => __DIR__ . '/../wordpress/php-ai-client',
             'aliases' => array(),
